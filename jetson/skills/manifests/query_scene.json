@@ -1,0 +1,35 @@
+{
+  "id": "openvision.skill.query_scene",
+  "version": "0.1.0",
+  "name": "query_scene",
+  "description": "Answer a visual question from current Jetson frame evidence.",
+  "latency_class": "interactive",
+  "local_first": true,
+  "cloud_allowed": true,
+  "privacy_level": "medium",
+  "hud_policy": "answer_strip",
+  "timeout_ms": 5000,
+  "local_resources": ["frame_bus", "perception_graph"],
+  "activation_phrases_vi": ["nhìn phía trước", "đang có gì", "mô tả cảnh"],
+  "activation_phrases_en": ["describe scene", "what is in front"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "question": {"type": "string", "minLength": 1},
+      "include_crops": {"type": "boolean"}
+    },
+    "required": ["question"],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "answer": {"type": "string"},
+      "evidence": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["answer"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": ["uses perception graph first", "only escalates if local evidence is insufficient"],
+  "failure_modes": ["no frame evidence", "cloud unavailable when needed"]
+}

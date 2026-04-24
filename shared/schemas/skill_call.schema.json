@@ -12,7 +12,7 @@
     "session_id": { "type": ["string", "null"] },
     "status": {
       "type": "string",
-      "enum": ["queued", "running", "ok", "error", "cancelled", "not_implemented"]
+      "enum": ["queued", "running", "ok", "needs_cloud", "no_evidence", "error", "cancelled", "not_implemented"]
     },
     "result": { "type": ["object", "null"] },
     "error": { "type": ["object", "null"] },
@@ -20,4 +20,3 @@
     "updated_at": { "type": "string" }
   }
 }
-

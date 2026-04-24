@@ -21,9 +21,9 @@ from .settings import load_runtime_settings
 @dataclass(frozen=True, slots=True)
 class DebugSttSettings:
     enabled: bool = False
-    transcribe_url: str = "http://127.0.0.1:9460/inference"
-    health_url: str = "http://127.0.0.1:9460/health"
-    warm_url: str = "http://127.0.0.1:9460/warm"
+    transcribe_url: str = ""
+    health_url: str = ""
+    warm_url: str = ""
     language: str = "vi"
     profile: str = "v2_debug_sentence"
     beam_size: int = 5
@@ -64,9 +64,10 @@ class DebugSttRuntime:
 
     def status(self) -> dict[str, Any]:
         settings = self._settings_provider()
+        configured = bool(settings.transcribe_url and settings.health_url and settings.warm_url)
         return {
             "enabled": settings.enabled,
-            "status": "enabled" if settings.enabled else "disabled",
+            "status": "enabled" if settings.enabled and configured else "misconfigured" if settings.enabled else "disabled",
             "backend": "phowhisper_http",
             "transcribe_url": settings.transcribe_url if settings.enabled else None,
             "health_url": settings.health_url if settings.enabled else None,
@@ -144,6 +145,8 @@ class DebugSttRuntime:
         settings = self._settings_provider()
         if not settings.enabled:
             return {"enabled": False, "status": "disabled"}
+        if not settings.warm_url:
+            return {"enabled": True, "status": "misconfigured", "error": "OPENVISION_DEBUG_STT_WARM_URL is required"}
         async with httpx.AsyncClient(timeout=settings.timeout_s) as client:
             response = await client.get(settings.warm_url)
             response.raise_for_status()
@@ -241,6 +244,8 @@ def pcm16_to_wav_16k_mono(pcm: bytes, *, sample_rate: int, channels: int) -> byt
 
 
 async def _post_wav_to_worker(settings: DebugSttSettings, wav_bytes: bytes, session_id: str) -> dict[str, Any]:
+    if not settings.transcribe_url:
+        raise ValueError("OPENVISION_DEBUG_STT_TRANSCRIBE_URL is required")
     headers = {
         "Content-Type": "audio/wav",
         "X-Rokid-Session-Id": session_id,

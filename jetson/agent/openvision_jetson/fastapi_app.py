@@ -174,6 +174,22 @@ def create_app(control_plane: OpenVisionControlPlane | None = None) -> FastAPI:
             severity=request.severity,
         )
 
+    @app.get("/api/replay")
+    async def replay_all(limit: int = Query(default=1000, ge=1, le=5000)) -> dict[str, Any]:
+        return {"replay": control.session_replay(limit=limit)}
+
+    @app.get("/api/replay/{session_id}")
+    async def replay_session(session_id: str, limit: int = Query(default=1000, ge=1, le=5000)) -> dict[str, Any]:
+        return {"replay": control.session_replay(session_id=session_id, limit=limit)}
+
+    @app.get("/api/scorecard")
+    async def scorecard_all(limit: int = Query(default=1000, ge=1, le=5000)) -> dict[str, Any]:
+        return {"scorecard": control.session_scorecard(limit=limit)}
+
+    @app.get("/api/scorecard/{session_id}")
+    async def scorecard_session(session_id: str, limit: int = Query(default=1000, ge=1, le=5000)) -> dict[str, Any]:
+        return {"scorecard": control.session_scorecard(session_id=session_id, limit=limit)}
+
     @app.get("/api/skills")
     async def list_skills() -> dict[str, list[dict[str, Any]]]:
         return {"skills": control.list_skills()}

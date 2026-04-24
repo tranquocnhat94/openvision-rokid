@@ -78,6 +78,15 @@ class SkillDefinition:
     cloud_allowed: bool = False
     hud_policy: str = "answer_strip"
     timeout_ms: int = 2500
+    manifest_id: str | None = None
+    version: str = "0.1.0"
+    latency_class: str = "interactive"
+    local_first: bool = True
+    privacy_level: str = "low"
+    activation_phrases_vi: list[str] = field(default_factory=list)
+    activation_phrases_en: list[str] = field(default_factory=list)
+    acceptance_tests: list[str] = field(default_factory=list)
+    failure_modes: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)

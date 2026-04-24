@@ -41,4 +41,3 @@ class InMemoryEventStore:
         if session_id:
             events = [event for event in events if event.session_id == session_id]
         return [to_jsonable(event) for event in events[-limit:]]
-

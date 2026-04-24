@@ -15,6 +15,7 @@ from .preview_store import PreviewStore
 from .realtime_manager import RealtimeSessionManager
 from .rv101_tcp_ingest import Rv101TcpIngestService
 from .session_store import SessionStore
+from .session_replay import build_session_replay, build_session_scorecard
 from .settings import load_settings
 from .simulator_bridge import SimulatorBridge
 from .skill_executor import SkillExecutor
@@ -126,6 +127,23 @@ class OpenVisionControlPlane:
 
     def list_events(self, *, session_id: str | None = None, limit: int = 200) -> list[dict[str, Any]]:
         return self.events.list(session_id=session_id, limit=limit)
+
+    def session_replay(self, *, session_id: str | None = None, limit: int = 1000) -> dict[str, Any]:
+        return build_session_replay(
+            session_id=session_id,
+            sessions=self.sessions.list(),
+            events=self.events.list(session_id=session_id, limit=limit),
+            media=self.media.statuses(),
+            perception=self.perception.list_latest(),
+            hud_scenes=self.hud.list_latest(),
+            realtime=self.realtime.statuses(),
+            debug_stt=self.debug_stt.transcripts(session_id=session_id, limit=limit),
+            limit=limit,
+        )
+
+    def session_scorecard(self, *, session_id: str | None = None, limit: int = 1000) -> dict[str, Any]:
+        replay = self.session_replay(session_id=session_id, limit=limit)
+        return build_session_scorecard(replay)
 
     def list_sessions(self) -> list[dict[str, Any]]:
         return self.sessions.list()

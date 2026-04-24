@@ -2,7 +2,7 @@
 
 The package is intentionally split across the Jetson module folders
 (`media_gateway`, `skills`, `perception`, and so on) while keeping the
-legacy import namespace `openvision_jetson.*` stable for tests, service
+stable import namespace `openvision_jetson.*` available for tests, service
 startup, and deployment.
 """
 

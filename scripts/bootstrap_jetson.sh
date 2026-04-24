@@ -10,4 +10,3 @@ VENV="$ROOT/.venv"
 "$VENV/bin/python" -m pip install -r "$ROOT/jetson/agent/requirements.txt"
 
 echo "OpenVision v2 Jetson venv ready: $VENV"
-

@@ -17,4 +17,3 @@ def sample_hud_scene(session_id: str | None = None) -> dict[str, object]:
         ttl_ms=2500,
     )
     return to_jsonable(scene)
-

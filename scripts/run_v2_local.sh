@@ -11,4 +11,3 @@ fi
 
 cd "$ROOT/jetson/agent"
 exec "$PY" -m uvicorn openvision_jetson.fastapi_app:app --host "${OPENVISION_HOST:-127.0.0.1}" --port "${OPENVISION_PORT:-8765}"
-

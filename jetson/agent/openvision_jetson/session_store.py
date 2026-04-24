@@ -37,4 +37,3 @@ class SessionStore:
                 session.status = status
             session.updated_at = utc_now()
             return to_jsonable(session)
-

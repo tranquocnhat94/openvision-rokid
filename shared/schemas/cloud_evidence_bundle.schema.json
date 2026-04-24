@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/cloud_evidence_bundle.schema.json",
+  "title": "CloudEvidenceBundle",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "bundle_id",
+    "session_id",
+    "skill_id",
+    "user_query",
+    "created_at",
+    "local_summary",
+    "candidates",
+    "requested_output",
+    "privacy"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "cloud_evidence_bundle.v1"},
+    "bundle_id": {"type": "string"},
+    "session_id": {"type": "string"},
+    "skill_id": {"type": "string"},
+    "user_query": {"type": "string"},
+    "created_at": {"type": "string"},
+    "local_summary": {"type": "object"},
+    "frame_refs": {"type": "array", "items": {"type": "string"}},
+    "crop_refs": {"type": "array", "items": {"type": "string"}},
+    "candidates": {"type": "array", "items": {"type": "object"}},
+    "requested_output": {
+      "type": "object",
+      "required": ["format", "max_answer_chars", "hud_allowed"],
+      "additionalProperties": false,
+      "properties": {
+        "format": {"type": "string", "enum": ["json"]},
+        "max_answer_chars": {"type": "integer", "minimum": 1, "maximum": 500},
+        "hud_allowed": {"type": "boolean"}
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "required": ["contains_face", "allow_cloud", "store_result"],
+      "additionalProperties": false,
+      "properties": {
+        "contains_face": {"type": "boolean"},
+        "allow_cloud": {"type": "boolean"},
+        "store_result": {"type": "boolean"},
+        "privacy_level": {"type": "string", "enum": ["low", "medium", "high", "sensitive"]}
+      }
+    }
+  }
+}

@@ -1,22 +1,18 @@
 # Jetson Deploy Notes
 
-These notes describe the intended Jetson deployment shape. Replace the example host, user, and path with values from your own device.
+Target Jetson:
 
-## Target
-
-- host: `<your-jetson-host-or-ip>`
-- user: `jetson`
+- host: `JETSON_LAN_IP`
+- user: `JETSON_USER`
 - deploy path: `/opt/openvision-rokid`
 
-Never write Jetson passwords, OpenAI keys, SSH keys, or private service tokens into this repository.
+Do not write the Jetson password or OpenAI key into this repo.
 
 ## Deploy
 
 ```bash
-JETSON_HOST=<your-jetson-host-or-ip> \
-JETSON_USER=jetson \
-JETSON_PATH=/opt/openvision-rokid \
-bash scripts/deploy_to_jetson.sh
+cd /path/to/openvision-rokid
+JETSON_HOST=JETSON_LAN_IP JETSON_USER=JETSON_USER bash scripts/deploy_to_jetson.sh
 ```
 
 The deploy script preserves Jetson-local runtime state:
@@ -25,12 +21,20 @@ The deploy script preserves Jetson-local runtime state:
 - `runtime/`
 - `ops/secrets/`
 
-## Example URLs
+## Current v2 URLs
 
-- LAN HTTP: `http://<your-jetson-host-or-ip>:8765`
-- Optional HTTPS/tunnel endpoint: `https://<your-secure-hostname>:8443`
-- iPhone simulator: `https://<your-secure-hostname>:8443/simulator/`
-- API docs: `https://<your-secure-hostname>:8443/ops/api`
+- LAN HTTP: `http://JETSON_LAN_IP:8765`
+- Tailnet HTTPS: `https://TAILNET_HOST:8443`
+- iPhone simulator: `https://TAILNET_HOST:8443/simulator/`
+- API docs: `https://TAILNET_HOST:8443/ops/api`
+
+Tailscale Serve is configured on Jetson with:
+
+```bash
+tailscale serve --bg --https 8443 8765
+```
+
+The default Tailscale HTTPS root without port is not used by v2 because it was already pointing at another local service.
 
 ## Install systemd Service On Jetson
 
@@ -68,21 +72,37 @@ v2 exposes a separate adapter surface for Rokid perception snapshots:
 - status: `GET /api/adapters/yolo26`
 - snapshot ingress: `POST /api/adapters/yolo26/{session_id}/detections`
 
-Default mode is `disabled`. For a separate Rokid-specific detector process, set:
+Default mode is `disabled` so v2 does not accidentally touch the existing Ring / security YOLO26 runtime. For a separate Rokid-specific detector process, set:
 
 ```bash
 OPENVISION_YOLO26_MODE=external_snapshot
 ```
 
-The external runtime posts normalized detections into v2, and v2 updates the perception graph plus HUD-facing skill layer.
+The external runtime posts normalized detections into v2, and v2 updates the perception graph plus HUD-facing skill layer. Do not point v2 at the Ring runtime process.
 
 ## RV101 Media Ingest
 
-v2 exposes the RV101 control/media contract:
+v2 now exposes the product-shaped RV101 control/media contract:
 
-- control websocket: `ws://<your-jetson-host-or-ip>:8765/ws`
-- video TCP: `<your-jetson-host-or-ip>:8770`
-- audio TCP: `<your-jetson-host-or-ip>:8771`
+- control websocket: `ws://JETSON_LAN_IP:8765/ws`
+- video TCP: `JETSON_LAN_IP:8770`
+- audio TCP: `JETSON_LAN_IP:8771`
 - status: `GET /api/rv101/ingest`
 
-The websocket `client_hello` response is `session_accept` with the active TCP ports. Video and audio use the `RVS1` frame envelope: H.264 samples on video TCP and PCM S16LE chunks on audio TCP.
+The websocket `client_hello` response is `session_accept` with the active TCP ports. Video and audio use the existing `RVS1` frame envelope from the glasses app: H.264 samples on video TCP and PCM S16LE chunks on audio TCP.
+
+## v1 Retirement Rule
+
+Do not stop or delete v1 from Jetson until v2 has passed:
+
+- local v2 tests;
+- Jetson dependency install;
+- `openvision-jetson` service starts;
+- Web UI reachable at `http://JETSON_LAN_IP:8765`;
+- at least one RV101 or iPhone session can be created;
+- RV101 `/ws` handshake and TCP media ports are reachable;
+- OpenAI key is present only in Jetson environment;
+- YOLO26 adapter is either disabled or explicitly pointed at a separate Rokid-specific runtime/snapshot source;
+- no Ring / YOLO26 security runtime is affected.
+
+After those gates pass, stop/delete only the known v1 Rokid service/files. Do not stop Ring / YOLO26 security services. Use `docs/openvision/16_ACCEPTANCE_TESTS.md`, `the current project status docs`, and a fresh Jetson log as the retirement gate.

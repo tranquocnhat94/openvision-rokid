@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/perception_graph.schema.json",
+  "title": "PerceptionSnapshot",
+  "type": "object",
+  "required": ["schema_version", "snapshot_id", "session_id", "source", "objects", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "perception_snapshot.v1"},
+    "snapshot_id": {"type": "string"},
+    "session_id": {"type": "string"},
+    "source": {"type": "string"},
+    "frame_id": {"type": ["string", "null"]},
+    "width": {"type": ["integer", "null"], "minimum": 1},
+    "height": {"type": ["integer", "null"], "minimum": 1},
+    "created_at": {"type": "string"},
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["object_id", "label", "confidence", "attributes"],
+        "additionalProperties": false,
+        "properties": {
+          "object_id": {"type": "string"},
+          "label": {"type": "string"},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "bbox": {
+            "type": ["array", "null"],
+            "items": {"type": "number"},
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "track_id": {"type": ["string", "null"]},
+          "attributes": {"type": "object"},
+          "crop_ref": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

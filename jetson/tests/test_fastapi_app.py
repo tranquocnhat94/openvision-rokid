@@ -46,6 +46,47 @@ class FastApiAppTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "not_implemented")
+        self.assertEqual(payload["result"]["manifest_id"], "openvision.skill.count_people")
+
+    def test_scorecard_endpoint_reports_session_gates(self):
+        session = self.client.post(
+            "/api/sessions",
+            json={"client_kind": "iphone_simulator", "capabilities": {"video": "webrtc"}},
+        ).json()["session"]
+        session_id = session["session_id"]
+        self.client.post(
+            f"/api/media/{session_id}/video/heartbeat",
+            json={"transport": "webrtc", "codec": "raw_video", "width": 640, "height": 480, "fps": 24},
+        )
+        self.client.post(
+            f"/api/media/{session_id}/audio/metrics",
+            json={
+                "transport": "webrtc",
+                "sample_rate": 24000,
+                "channels": 1,
+                "chunk_count": 4,
+                "strong_chunk_count": 3,
+            },
+        )
+        self.client.post(
+            f"/api/perception/{session_id}/detections",
+            json={"source": "unit", "detections": [{"label": "person", "confidence": 0.9}]},
+        )
+        self.client.post(
+            "/api/skills/count_people/execute",
+            json={"session_id": session_id, "args": {"min_confidence": 0.25}},
+        )
+
+        replay = self.client.get(f"/api/replay/{session_id}")
+        scorecard = self.client.get(f"/api/scorecard/{session_id}")
+
+        self.assertEqual(replay.status_code, 200)
+        self.assertEqual(replay.json()["replay"]["session_id"], session_id)
+        self.assertEqual(scorecard.status_code, 200)
+        payload = scorecard.json()["scorecard"]
+        self.assertEqual(payload["status"], "pass")
+        self.assertTrue(payload["gates"]["perception_seen"])
+        self.assertEqual(payload["metrics"]["max_audio_strong_chunk_ratio"], 0.75)
 
     def test_realtime_start_blocks_without_key(self):
         session = self.client.post(

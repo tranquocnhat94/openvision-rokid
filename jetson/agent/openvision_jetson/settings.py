@@ -17,9 +17,9 @@ class RuntimeSettings:
     realtime_voice: str
     realtime_url: str
     debug_stt_enabled: bool = False
-    debug_stt_transcribe_url: str = "http://127.0.0.1:9460/inference"
-    debug_stt_health_url: str = "http://127.0.0.1:9460/health"
-    debug_stt_warm_url: str = "http://127.0.0.1:9460/warm"
+    debug_stt_transcribe_url: str = ""
+    debug_stt_health_url: str = ""
+    debug_stt_warm_url: str = ""
     debug_stt_language: str = "vi"
     debug_stt_profile: str = "v2_debug_sentence"
     debug_stt_beam_size: int = 5
@@ -53,9 +53,9 @@ def load_runtime_settings() -> RuntimeSettings:
         realtime_voice=os.getenv("OPENVISION_REALTIME_VOICE", "marin"),
         realtime_url=os.getenv("OPENVISION_REALTIME_URL", "wss://api.openai.com/v1/realtime"),
         debug_stt_enabled=_env_bool("OPENVISION_DEBUG_STT_ENABLED", False),
-        debug_stt_transcribe_url=os.getenv("OPENVISION_DEBUG_STT_TRANSCRIBE_URL", "http://127.0.0.1:9460/inference"),
-        debug_stt_health_url=os.getenv("OPENVISION_DEBUG_STT_HEALTH_URL", "http://127.0.0.1:9460/health"),
-        debug_stt_warm_url=os.getenv("OPENVISION_DEBUG_STT_WARM_URL", "http://127.0.0.1:9460/warm"),
+        debug_stt_transcribe_url=os.getenv("OPENVISION_DEBUG_STT_TRANSCRIBE_URL", ""),
+        debug_stt_health_url=os.getenv("OPENVISION_DEBUG_STT_HEALTH_URL", ""),
+        debug_stt_warm_url=os.getenv("OPENVISION_DEBUG_STT_WARM_URL", ""),
         debug_stt_language=os.getenv("OPENVISION_DEBUG_STT_LANGUAGE", "vi"),
         debug_stt_profile=os.getenv("OPENVISION_DEBUG_STT_PROFILE", "v2_debug_sentence"),
         debug_stt_beam_size=_env_int("OPENVISION_DEBUG_STT_BEAM_SIZE", 5),

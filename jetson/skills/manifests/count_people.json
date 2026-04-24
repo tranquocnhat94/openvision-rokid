@@ -1,0 +1,36 @@
+{
+  "id": "openvision.skill.count_people",
+  "version": "0.1.0",
+  "name": "count_people",
+  "description": "Count visible people using Jetson-owned detections/tracks.",
+  "latency_class": "live",
+  "local_first": true,
+  "cloud_allowed": false,
+  "privacy_level": "low",
+  "hud_policy": "answer_strip",
+  "timeout_ms": 1500,
+  "local_resources": ["perception_graph", "yolo26_rokid_adapter"],
+  "activation_phrases_vi": ["có bao nhiêu người", "đếm người", "phía trước có mấy người"],
+  "activation_phrases_en": ["count people", "how many people"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "frame_window_ms": {"type": "integer", "minimum": 100, "maximum": 5000},
+      "min_confidence": {"type": "number", "minimum": 0, "maximum": 1}
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "count": {"type": "integer", "minimum": 0},
+      "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+      "evidence": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["count", "confidence"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": ["returns count from latest perception snapshot", "does not call cloud"],
+  "failure_modes": ["no perception snapshot", "detector offline"]
+}

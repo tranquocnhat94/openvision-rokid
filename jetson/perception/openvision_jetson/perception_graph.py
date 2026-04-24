@@ -22,6 +22,7 @@ class PerceptionObject:
 
 @dataclass(slots=True)
 class PerceptionSnapshot:
+    schema_version: str
     snapshot_id: str
     session_id: str
     source: str
@@ -49,6 +50,7 @@ class PerceptionGraph:
     ) -> dict[str, Any]:
         objects = [self._coerce_detection(item) for item in detections]
         snapshot = PerceptionSnapshot(
+            schema_version="perception_snapshot.v1",
             snapshot_id=new_id("perception"),
             session_id=session_id,
             source=source,
@@ -93,4 +95,3 @@ def _to_float(value: Any) -> float:
         return float(value)
     except (TypeError, ValueError):
         return 0.0
-

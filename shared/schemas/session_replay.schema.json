@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/session_replay.schema.json",
+  "title": "SessionReplay",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "session_id",
+    "redacted",
+    "sessions",
+    "events",
+    "media",
+    "perception",
+    "hud_scenes",
+    "realtime",
+    "debug_stt",
+    "limits"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "openvision.session_replay.v1"},
+    "generated_at": {"type": "string"},
+    "session_id": {"type": ["string", "null"]},
+    "redacted": {"type": "boolean"},
+    "sessions": {"type": "array", "items": {"type": "object"}},
+    "events": {"type": "array", "items": {"type": "object"}},
+    "media": {"type": "array", "items": {"type": "object"}},
+    "perception": {"type": "array", "items": {"type": "object"}},
+    "hud_scenes": {"type": "array", "items": {"type": "object"}},
+    "realtime": {"type": "array", "items": {"type": "object"}},
+    "debug_stt": {"type": "array", "items": {"type": "object"}},
+    "limits": {"type": "object"}
+  }
+}

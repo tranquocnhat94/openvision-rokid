@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/cloud_result.schema.json",
+  "title": "CloudResult",
+  "type": "object",
+  "required": ["schema_version", "status", "answer_short", "confidence", "safety_flags"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "cloud_result.v1"},
+    "status": {"type": "string", "enum": ["ok", "no_match", "uncertain", "blocked", "error"]},
+    "answer_short": {"type": "string", "maxLength": 80},
+    "answer_long": {"type": ["string", "null"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "selected_candidate_id": {"type": ["string", "null"]},
+    "hud_scene": {"type": ["object", "null"]},
+    "safety_flags": {"type": "array", "items": {"type": "string"}},
+    "memory_event": {"type": ["object", "null"]},
+    "error": {"type": ["object", "null"]}
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/memory_event.schema.json",
+  "title": "MemoryEvent",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "session_id",
+    "created_at",
+    "type",
+    "summary",
+    "retention",
+    "cloud_synced",
+    "delete_allowed"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "memory_event.v1"},
+    "event_id": {"type": "string"},
+    "session_id": {"type": "string"},
+    "created_at": {"type": "string"},
+    "type": {"type": "string"},
+    "summary": {"type": "string", "maxLength": 500},
+    "evidence_ref": {"type": ["string", "null"]},
+    "retention": {"type": "string", "enum": ["session_only", "user_saved", "expires_24h", "expires_7d"]},
+    "cloud_synced": {"type": "boolean"},
+    "delete_allowed": {"type": "boolean"}
+  }
+}
