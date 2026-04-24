@@ -20,6 +20,7 @@ This directory defines the architecture and execution path for OpenVision Rokid 
 14. `15_DO_NOT_BUILD_YET.md`
 15. `16_ACCEPTANCE_TESTS.md`
 16. `17_REPO_INVENTORY.md`
+17. `18_IMPLEMENTATION_PLAYBOOK.md`
 
 ## V2 in one sentence
 

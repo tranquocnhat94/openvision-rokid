@@ -79,6 +79,14 @@ Phase 0: repo inventory + docs/schema foundation
 Phase 1: stream/audio/HUD reliability baseline
 ```
 
+The latest implementation playbook is `docs/openvision/18_IMPLEMENTATION_PLAYBOOK.md`. It defines the near-term PR sequence:
+
+- PR 1.1: strengthen session scorecard gates.
+- PR 1.2: add stream metrics baseline.
+- PR 1.3: add audio metrics baseline.
+- PR 1.4: add HUD baseline validation.
+- Then move to Phase 2 perception graph hardening.
+
 Implemented foundation:
 
 - Jetson FastAPI service.
