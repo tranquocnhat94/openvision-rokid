@@ -1,0 +1,9 @@
+# First production API stack target. The v2 core contracts currently run
+# without these dependencies so the scaffold can be tested on a clean machine.
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+websocket-client==1.8.0
+aiortc==1.9.0
+httpx==0.28.1
+websockets==16.0
+Pillow==11.3.0

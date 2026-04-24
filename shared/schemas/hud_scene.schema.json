@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/hud_scene.schema.json",
+  "title": "HudScene",
+  "type": "object",
+  "required": ["scene_id", "edge_chips", "thumbnails", "priority", "ttl_ms", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "scene_id": { "type": "string" },
+    "session_id": { "type": ["string", "null"] },
+    "answer_strip": { "type": ["string", "null"] },
+    "edge_chips": { "type": "array", "items": { "type": "string" } },
+    "thumbnails": { "type": "array", "items": { "type": "object" } },
+    "target_hint": { "type": ["object", "null"] },
+    "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"] },
+    "ttl_ms": { "type": "integer", "minimum": 0 },
+    "created_at": { "type": "string" }
+  }
+}
+

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/session.schema.json",
+  "title": "ClientSession",
+  "type": "object",
+  "required": ["session_id", "client_kind", "status", "created_at", "updated_at"],
+  "additionalProperties": false,
+  "properties": {
+    "session_id": { "type": "string" },
+    "client_kind": {
+      "type": "string",
+      "enum": ["rv101_glasses", "iphone_simulator", "replay", "unknown"]
+    },
+    "status": { "type": "string" },
+    "capabilities": { "type": "object" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}
+

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/skill_call.schema.json",
+  "title": "SkillCall",
+  "type": "object",
+  "required": ["skill_call_id", "name", "args", "status", "created_at", "updated_at"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_call_id": { "type": "string" },
+    "name": { "type": "string" },
+    "args": { "type": "object" },
+    "session_id": { "type": ["string", "null"] },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "running", "ok", "error", "cancelled", "not_implemented"]
+    },
+    "result": { "type": ["object", "null"] },
+    "error": { "type": ["object", "null"] },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}
+
