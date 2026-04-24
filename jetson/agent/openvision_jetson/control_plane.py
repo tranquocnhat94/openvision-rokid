@@ -138,6 +138,7 @@ class OpenVisionControlPlane:
             hud_scenes=self.hud.list_latest(),
             realtime=self.realtime.statuses(),
             debug_stt=self.debug_stt.transcripts(session_id=session_id, limit=limit),
+            debug_stt_status=self.debug_stt.status(),
             limit=limit,
         )
 

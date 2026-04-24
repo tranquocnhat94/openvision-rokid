@@ -15,6 +15,7 @@
     "hud_scenes",
     "realtime",
     "debug_stt",
+    "debug_stt_status",
     "limits"
   ],
   "additionalProperties": false,
@@ -30,6 +31,7 @@
     "hud_scenes": {"type": "array", "items": {"type": "object"}},
     "realtime": {"type": "array", "items": {"type": "object"}},
     "debug_stt": {"type": "array", "items": {"type": "object"}},
+    "debug_stt_status": {"type": "object"},
     "limits": {"type": "object"}
   }
 }

@@ -1,86 +1,110 @@
 # OpenVision Rokid V2
 
-**OpenVision Rokid V2** is a local-first AI skill runtime for smart glasses.
+**OpenVision Rokid V2 is now a local-first AI Skill OS for smart glasses.**
 
-Rokid RV101 captures reality. Jetson turns the live stream into structured local perception, runs typed skills, decides whether cloud reasoning is needed, and emits tiny HUD scenes. Cloud AI is not the default hot path; it is an escalation layer for ambiguous visual verification, language, web/file/tool work, and deeper reasoning.
+This repository is not being built as a Realtime-first demo, a phone UI on glasses, or a bundle of separate AI endpoints. The current direction is a measured runtime platform:
 
 ```text
-Rokid = eyes + ears + tiny HUD
-Jetson = realtime perception brain + skill runtime + HUD authority
-Cloud AI = typed escalation when local evidence is not enough
+Rokid RV101
+  -> live camera + microphone + tiny HUD
+  -> Jetson stream ingest
+  -> perception graph
+  -> manifest-driven skill runtime
+  -> local answer OR cloud evidence gateway
+  -> HUD scene + replay/scorecard
 ```
 
-## What This Project Is
+Jetson is the realtime authority. Cloud AI is escalation. The glasses stay thin.
 
-OpenVision Rokid V2 is being built as a practical real-world **AI Skill OS** for smart glasses. It should help the user:
+## What Changed
 
-- see what is in front of them;
-- understand what matters in the scene;
-- find people, objects, text, or targets;
-- remember useful real-world events with privacy controls;
-- receive short next-step guidance while staying present in the physical world.
+| Earlier direction | Current V2 direction |
+| --- | --- |
+| OpenAI Realtime as the main live brain | Jetson local-first skill runtime; Realtime is only the current cloud/live bridge |
+| Build impressive skills quickly | First make streams, audio, HUD, replay, scorecards, schemas, and skill boundaries measurable |
+| Cloud reasoning from wherever a feature needs it | One cloud evidence gateway with privacy/budget checks and structured results |
+| One-off endpoints such as detect/read/ask/radar | Shared perception graph -> skill runtime -> HUD scene/cloud gateway/memory event |
+| Debug panels and manual testing | Session replay and scorecard gates decide pass/warn/fail |
+| Old mode-style product thinking | Manifest-driven skills with typed inputs, outputs, latency class, privacy level, tests, and failure modes |
 
-It is not a phone UI on glasses, not a full-screen AR dashboard, not a cloud video streaming product, and not a collection of isolated AI demos.
+## Current Public Checkpoint
 
-## Current Checkpoint
+The project is between **Phase 0** and **Phase 1**.
 
-The project is currently moving from **Phase 0** into **Phase 1**.
+Phase 0 foundation is in place:
 
-Phase 0 is mostly complete:
-
-- V2 guidance docs under `docs/openvision/`.
-- Repo inventory and active/legacy path separation.
-- Shared JSON schemas.
+- V2 architecture docs under `docs/openvision/`.
+- Shared JSON schemas for runtime contracts.
 - Manifest-driven skill registry foundation.
 - Perception snapshot MVP.
 - HUD authority MVP.
-- Session replay and scorecard skeleton.
+- In-memory session replay and scorecard skeleton.
 - RV101 TCP ingest skeleton.
 - iPhone WebRTC harness.
 - OpenAI Realtime bridge as the current live cloud channel.
 - Optional Debug STT sidecar.
 - YOLO26 adapter disabled by default.
-- Backend tests.
+- Backend test suite.
 
-Phase 1 is the next active target:
+Phase 1 has started:
+
+- **PR 1.1 structured scorecard gates is done** in the current V2 source.
+- Next public/runtime work is PR 1.2: stream metrics baseline.
+- Then PR 1.3 audio metrics baseline.
+- Then PR 1.4 HUD baseline validation.
+
+The active implementation checklist lives in:
 
 ```text
-Prove iPhone/RV101 -> Jetson -> HUD/audio paths are measurable, visible, and scoreable.
+docs/openvision/18_IMPLEMENTATION_PLAYBOOK.md
 ```
 
-Immediate PR sequence from `docs/openvision/18_IMPLEMENTATION_PLAYBOOK.md`:
+## Current Build Priority
 
-1. Strengthen session scorecard gates.
-2. Add stream metrics baseline.
-3. Add audio metrics baseline.
-4. Add HUD baseline validation.
-5. Then continue to Phase 2 perception graph hardening.
+Do not start by adding many flashy skills. First make the platform measurable:
 
-## Architecture
+```text
+1. scorecard gates
+2. stream metrics
+3. audio metrics
+4. HUD baseline
+5. perception graph hardening
+6. skill runtime/router
+7. cloud evidence gateway
+8. first four practical skills
+```
+
+This is the near-term product rule:
+
+```text
+If a session cannot be replayed and scored, do not call it improved.
+```
+
+## Runtime Architecture
 
 ```mermaid
 flowchart LR
   G["Rokid RV101\ncamera + mic + tiny HUD"]
   I["iPhone harness\nbrowser debug client"]
   S["Stream ingest\nvideo/audio/session metrics"]
-  P["Perception graph\nobjects + text + risks + evidence"]
+  Q["Replay + scorecard\npass / warn / fail"]
+  P["Perception graph\nobjects + tracks + text + risks"]
   R["Skill runtime\nmanifest registry + router"]
-  H["HUD authority\nsmall scene JSON"]
-  C["Cloud gateway\nevidence bundle + privacy/budget gate"]
+  H["HUD authority\nschema-backed scene JSON"]
+  C["Cloud evidence gateway\nprivacy + budget + structured result"]
   A["Cloud AI\nreasoning + language + tools"]
-  M["Memory events\nlocal-first retention"]
-  Q["Replay + scorecard\nmeasurable sessions"]
+  M["Memory event\nlocal-first retention"]
 
   G --> S
   I --> S
+  S --> Q
   S --> P
   P --> R
   R --> H
   R --> M
   R --> Q
-  S --> Q
   H --> Q
-  R -->|"only if needed"| C
+  R -->|"only when local evidence is insufficient"| C
   C --> A
   A --> C
   C --> R
@@ -88,7 +112,7 @@ flowchart LR
   H --> I
 ```
 
-Preferred runtime flow:
+Preferred flow:
 
 ```text
 stream ingest
@@ -98,63 +122,81 @@ stream ingest
   -> HUD scene / memory event / replay metric
 ```
 
-The important rule is that individual skills should not each grab frames, call cloud, render HUD, and log in their own private way. They should use the shared perception graph, skill runtime, cloud gateway, HUD scene protocol, and scorecard/replay system.
+Anti-pattern:
 
-## Required Runtime Primitives
+```text
+skill grabs frame -> skill calls cloud -> skill renders custom HUD -> skill logs its own format
+```
 
-| Primitive | Why it exists |
-| --- | --- |
-| `perception_graph` | Shared world state for objects, tracks, text, risks, zones, evidence refs, and metrics. |
-| `skill_manifest` | Declares inputs, outputs, latency class, local/cloud policy, privacy level, tests, and failure modes. |
-| `hud_scene` | Compact display contract for answer strips, status chips, direction hints, target markers, alerts, and progress cues. |
-| `cloud_evidence_bundle` | Minimal structured evidence sent to cloud only when local confidence is insufficient and policy allows it. |
-| `cloud_result` | Structured cloud answer that Jetson validates before updating HUD, skill state, or memory. |
-| `memory_event` | Privacy-aware event/object/location memory with explicit retention metadata. |
-| `session_replay` | Redacted session bundle for debugging and regression replay. |
-| `session_scorecard` | Health summary for stream, audio, perception, skill, cloud, HUD, and failure reasons. |
+Preferred pattern:
+
+```text
+shared perception graph
+  -> shared skill registry
+  -> shared cloud gateway
+  -> shared HUD scene protocol
+  -> shared replay/scorecard
+```
+
+## Required Runtime Contracts
+
+| Contract | Status | Purpose |
+| --- | --- | --- |
+| `session_scorecard` | skeleton + PR 1.1 gates | Tells why a session passed, warned, or failed. |
+| `session_replay` | skeleton | Redacted bundle for debugging and regression replay. |
+| `perception_graph` | snapshot MVP | Shared world state for visible objects, text, zones, risks, evidence, and metrics. |
+| `skill_manifest` | foundation | Declares inputs, outputs, latency class, local/cloud behavior, privacy, tests, and failure modes. |
+| `hud_scene` | MVP | Small display protocol for answer strips, status chips, direction hints, target markers, alerts, and progress cues. |
+| `cloud_evidence_bundle` | schema only | Compact evidence packet for cloud escalation. |
+| `cloud_result` | schema only | Structured cloud response validated by Jetson before HUD/memory updates. |
+| `memory_event` | schema only | Privacy-aware object/event/location memory with retention metadata. |
 
 ## Roadmap
 
 ```mermaid
 flowchart TD
   P0["Phase 0\nDocs + schemas + inventory"]
-  P1["Phase 1\nStream/audio/HUD reliability baseline"]
+  P11["Phase 1.1\nScorecard gates"]
+  P12["Phase 1.2\nStream metrics"]
+  P13["Phase 1.3\nAudio metrics"]
+  P14["Phase 1.4\nHUD baseline"]
   P2["Phase 2\nPerception graph MVP"]
   P3["Phase 3\nSkill runtime + Vietnamese router"]
-  P4["Phase 4\nFirst four practical skills"]
+  P4["Phase 4\nobject_counter + scene_describe + target_finder + text_reader"]
   P5["Phase 5\nCloud evidence gateway"]
   P6["Phase 6\nReality Radar MVP"]
   P7["Phase 7\nMemory + task coaching"]
   P8["Phase 8\nDashboard + data flywheel"]
 
-  P0 --> P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8
+  P0 --> P11 --> P12 --> P13 --> P14 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8
 
   classDef done fill:#d9fbe5,stroke:#2f855a,color:#102a1f;
   classDef current fill:#fff3bf,stroke:#b7791f,color:#2f2400;
   classDef next fill:#e7f5ff,stroke:#2b6cb0,color:#102a43;
-  class P0 done;
-  class P1 current;
-  class P2,P3,P4,P5,P6,P7,P8 next;
+
+  class P0,P11 done;
+  class P12 current;
+  class P13,P14,P2,P3,P4,P5,P6,P7,P8 next;
 ```
 
 ## First Four Practical Skills
 
-These skills are intentionally small. They prove the platform before feature volume grows.
+These come after the reliability and runtime primitives are measurable.
 
-| Skill | Local-first behavior | Cloud use |
+| Skill | Local-first behavior | Cloud escalation |
 | --- | --- | --- |
 | `object_counter` | Count objects/people from perception graph by class and zone. | Avoid unless local evidence is ambiguous. |
-| `scene_describe` | Summarize visible objects, text, risks, and scene state. | Optional richer explanation. |
+| `scene_describe` | Summarize objects, text, risks, and current scene state. | Optional deeper explanation. |
 | `target_finder` | Rank local candidates and emit direction/marker HUD. | Verify ambiguous attributes from selected crops only. |
-| `text_reader` | Read signs, labels, and short text with local OCR. | Escalate blurry/low-confidence text. |
+| `text_reader` | Read signs, labels, and short text with local OCR. | Escalate blurry or low-confidence text. |
 
-Reality Radar comes after these foundations. It should be built from target finder, local tracking, candidate ranking, cloud verification for ambiguity, and compact HUD direction hints.
+Reality Radar is later. It should be built from target finder, stable tracking, candidate ranking, cloud verification only for ambiguity, and compact HUD direction hints.
 
-## What Exists In This Repo
+## Repository Layout
 
 ```text
 .
-|-- docs/openvision/       # V2 architecture, roadmap, acceptance tests, implementation playbook
+|-- docs/openvision/       # Current V2 architecture, acceptance tests, implementation playbook
 |-- shared/schemas/        # JSON schemas for runtime contracts
 |-- jetson/                # Active Jetson V2 runtime
 |-- glasses/               # RV101 thin-client contract and future Android V2 module
@@ -167,8 +209,8 @@ Jetson runtime:
 
 ```text
 jetson/
-|-- agent/             # FastAPI app, sessions, settings, replay/scorecard, control plane
-|-- media_gateway/     # RV101 TCP ingest, simulator bridge, preview/media state
+|-- agent/             # FastAPI app, settings, sessions, replay/scorecard, control plane
+|-- media_gateway/     # RV101 TCP ingest, simulator bridge, media state
 |-- audio_turns/       # Audio signal metrics and turn handling
 |-- perception/        # Perception graph and isolated YOLO26 adapter boundary
 |-- skills/            # Skill manifests, registry, executor foundation
@@ -180,23 +222,23 @@ jetson/
 `-- tests/             # Backend tests
 ```
 
-## What Is Not Done Yet
+## Not Done Yet
 
 - Durable replay files and CLI scorecard tooling.
 - Fresh stream/audio/HUD baseline from iPhone or RV101 sessions.
 - Temporal perception graph with stable tracking history.
 - Cloud evidence gateway runtime.
 - Vietnamese local router.
-- Production-quality `object_counter`, `scene_describe`, `target_finder`, and `text_reader`.
+- Production-quality first four skills.
 - Clean buildable V2 Android glasses app.
 - RV101 real-device signoff logs for the clean V2 path.
 
 ## Design Rules
 
 - Rokid stays thin: capture, microphone, transport, session state, and tiny HUD only.
-- Jetson is the realtime authority for perception, skills, HUD, replay, and metrics.
-- Cloud calls go through evidence bundles, privacy checks, and budget checks.
-- HUD output stays short and schema-backed.
+- Jetson owns realtime perception, skill runtime, HUD authority, replay, and metrics.
+- Cloud calls must go through evidence bundles, privacy checks, and budget checks.
+- HUD output must be short and schema-backed.
 - Skills consume shared context and emit structured results.
 - Debug STT is operator visibility only, not command routing.
 - YOLO26 reuse must stay in a separate OpenVision/Rokid path and must not touch an existing security runtime.
@@ -204,13 +246,14 @@ jetson/
 
 ## Verification
 
-Run the V2 backend check:
-
 ```bash
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r jetson/agent/requirements.txt
 ./scripts/check_v2.sh
 ```
 
-The public export is tested using the local V2 Python environment because `.venv` and runtime secrets are intentionally not committed.
+`.venv`, runtime secrets, logs, and debug bundles are intentionally not committed.
 
 ## Security
 

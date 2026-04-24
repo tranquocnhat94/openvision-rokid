@@ -85,7 +85,10 @@ class FastApiAppTest(unittest.TestCase):
         self.assertEqual(scorecard.status_code, 200)
         payload = scorecard.json()["scorecard"]
         self.assertEqual(payload["status"], "pass")
-        self.assertTrue(payload["gates"]["perception_seen"])
+        self.assertEqual(payload["gates"]["video_fps"]["status"], "pass")
+        self.assertEqual(payload["gates"]["audio_signal"]["status"], "pass")
+        self.assertEqual(payload["gates"]["hud_scene"]["status"], "pass")
+        self.assertEqual(payload["gates"]["perception_seen"]["status"], "pass")
         self.assertEqual(payload["metrics"]["max_audio_strong_chunk_ratio"], 0.75)
 
     def test_realtime_start_blocks_without_key(self):

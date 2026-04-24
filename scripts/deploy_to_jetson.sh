@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-: "${JETSON_HOST:?Set JETSON_HOST to your Jetson host or IP}"
+JETSON_HOST="${JETSON_HOST:-openvision-jetson.local}"
 JETSON_USER="${JETSON_USER:-jetson}"
 JETSON_PATH="${JETSON_PATH:-/opt/openvision-rokid}"
 

@@ -18,6 +18,7 @@ manifest-driven skill registry
 perception snapshot MVP
 HUD authority MVP
 session replay/scorecard skeleton
+Phase 1 PR 1.1 structured scorecard gates
 iPhone simulator bridge
 RV101 TCP ingest skeleton
 OpenAI Realtime bridge
@@ -135,6 +136,7 @@ owner: jetson/agent/session_replay.py
 add gates for video fps, audio strong chunk ratio, HUD scene present, realtime status, debug STT status
 add thresholds in one constants block
 tests: session scorecard pass/warn/fail
+status: done
 ```
 
 PR 1.2: stream metrics baseline
@@ -478,7 +480,6 @@ touching Ring/YOLO26 security runtime
 Start with Phase 1:
 
 ```text
-PR 1.1 strengthen scorecard gates
 PR 1.2 stream metrics baseline
 PR 1.3 audio metrics baseline
 PR 1.4 HUD baseline
