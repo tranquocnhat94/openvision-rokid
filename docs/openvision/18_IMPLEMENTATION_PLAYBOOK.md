@@ -4,11 +4,11 @@ Updated: 2026-04-25
 
 This is the practical step-by-step execution plan for OpenVision Rokid V2.
 
-Use this file when starting a new implementation topic so the project does not drift, duplicate old V1 logic, or jump into advanced skills before the platform is ready.
+Use this file when starting a new topic so the project does not drift, duplicate old V1 logic, or jump into advanced skills before the platform is ready.
 
 ## Current Checkpoint
 
-Current public `main` already contains:
+Current local `main` already contains:
 
 ```text
 Phase 0 docs/guidance foundation
@@ -19,11 +19,15 @@ perception snapshot MVP
 HUD authority MVP
 session replay/scorecard skeleton
 Phase 1 PR 1.1 structured scorecard gates
+Phase 1 PR 1.2 stream liveness metrics
+Phase 1 PR 1.3 audio signal and gate metrics
+Phase 1 PR 1.4 HUD baseline validation
 iPhone simulator bridge
 RV101 TCP ingest skeleton
 OpenAI Realtime bridge
 Debug STT sidecar
 YOLO26 adapter disabled by default
+Phase 2 HUD/schema/realtime/RV101 hardening
 ```
 
 Still not complete:
@@ -53,7 +57,7 @@ Rules:
 ```text
 work from main unless the user explicitly asks for another branch
 do not touch dirty legacy V1 files unless the task is specifically about them
-keep changes inside active V2 paths such as `jetson/`, `shared/`, `docs/openvision/`, `ops/`, and `scripts/`
+keep changes inside active V2 runtime paths and docs/openvision/ for V2 work
 run ./scripts/check_v2.sh before claiming done
 commit one PR-sized phase slice
 ```
@@ -100,7 +104,7 @@ Already done:
 ```text
 docs/openvision guidance pack
 repo inventory
-phase docs
+phase prompts
 shared JSON schemas
 manifest skill registry
 replay/scorecard skeleton
@@ -146,6 +150,7 @@ owner: jetson/media_gateway
 record video frame count, fps estimate, last frame age, transport, resolution
 surface in /api/media and /api/scorecard
 tests: media gateway metrics
+status: done
 ```
 
 PR 1.3: audio metrics baseline
@@ -155,6 +160,7 @@ owner: jetson/audio_turns + media_gateway
 record avg_abs, peak_abs, non_silent_ratio, strong chunk ratio, gate open/close counts
 scorecard reports weak audio clearly
 tests: silence vs speech scorecard
+status: done
 ```
 
 PR 1.4: HUD baseline
@@ -164,6 +170,7 @@ owner: jetson/hud_authority
 add HUD ping/test scene with schema validation
 record HUD scene count, last HUD age, latest answer strip
 tests: HUD scene updates scorecard
+status: done
 ```
 
 Manual Phase 1 test:
@@ -183,6 +190,7 @@ Exit rule:
 
 ```text
 scorecard can tell why a session passed, warned, or failed
+completed sessions are scored from recorded evidence, not marked failed only because the stream closed
 video/audio/HUD evidence appears in replay
 no claim of RV101 success without RV101 logs
 ```
@@ -202,6 +210,7 @@ owner: jetson/perception
 add zone field, timestamps, object age, frame dimensions
 keep snapshot JSON compatible with shared schema
 tests: graph serializes with optional fields missing
+status: done
 ```
 
 PR 2.2: zone computation
@@ -210,6 +219,7 @@ PR 2.2: zone computation
 owner: jetson/perception
 compute left_front/front/right_front/near/far/unknown from bbox + frame size
 tests: bbox-to-zone cases
+status: done
 ```
 
 PR 2.3: temporal graph
@@ -219,6 +229,7 @@ owner: jetson/perception
 keep recent snapshots per session
 track last_seen, first_seen, simple object continuity by track_id/object_id
 tests: object persists across updates
+status: done
 ```
 
 PR 2.4: YOLO26 external snapshot integration
@@ -228,6 +239,7 @@ owner: jetson/perception/yolo26_rokid_adapter.py
 accept only separate Rokid-specific external_snapshot source
 never bind to Ring runtime process
 tests: adapter disabled by default, accepts only explicit mode
+status: done
 ```
 
 Exit rule:
@@ -480,9 +492,7 @@ touching Ring/YOLO26 security runtime
 Start with Phase 1:
 
 ```text
-PR 1.2 stream metrics baseline
-PR 1.3 audio metrics baseline
-PR 1.4 HUD baseline
+manual iPhone/RV101 session signoff
 ```
 
-Only after Phase 1 is measurable, continue to Phase 2 perception graph hardening.
+Only after Phase 1 is measurable in a real or simulator session, continue to Phase 2 perception graph hardening.

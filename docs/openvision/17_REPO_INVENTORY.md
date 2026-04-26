@@ -2,20 +2,21 @@
 
 Updated: 2026-04-25
 
-This inventory captures the current V2 repo shape so contributors do not rediscover old paths or mistake legacy code for the product path.
+This inventory captures the current V2 repo shape so future contributors do not rediscover old paths or mistake legacy code for the product path.
 
 ## Active V2 Product Path
 
 ```text
-glasses/                RV101 thin-client contract docs
-iphone_web_simulator/   browser/iPhone harness contract
-jetson/                 active Jetson runtime
-shared/                 schemas, contracts, fixtures
-ops/                    deploy/systemd/env templates
-docs/openvision/        V2 architecture guidance pack
+
+  glasses/                RV101 thin-client contract docs
+  iphone_web_simulator/   browser/iPhone harness contract
+  jetson/                 active Jetson runtime
+  shared/                 schemas, contracts, fixtures
+  ops/                    deploy/systemd/env templates
+  docs/openvision/        mirrored V2 guidance pack
 ```
 
-Public architecture docs:
+Root canonical docs:
 
 ```text
 docs/openvision/
@@ -180,7 +181,7 @@ Perception graph:
 
 ```text
 exists: jetson/perception/openvision_jetson/perception_graph.py
-status: latest snapshot per session, not a full temporal graph yet
+status: schema-aligned snapshots with zones, frame dimensions, object ages, and recent temporal continuity
 ```
 
 Skill manifest / registry:
@@ -193,7 +194,8 @@ status: manifest-driven registry with executor still mapped by known skill names
 Cloud gateway:
 
 ```text
-missing runtime module
+exists: jetson/cloud_gateway/openvision_jetson/cloud_gateway.py
+status: typed evidence bundle/result validation, privacy gate, request budget, and provider fallback
 docs exist: docs/openvision/09_CLOUD_ESCALATION_GATEWAY.md
 schemas exist: cloud_evidence_bundle.schema.md, cloud_result.schema.md
 ```
@@ -217,18 +219,18 @@ status: Phase 0 schema foundation is now concrete enough for runtime tests
 ## Highest Current Risks
 
 1. V2 runtime is still thinner than the product docs.
-2. Cloud gateway is not implemented, so Realtime remains the only active cloud path.
-3. Perception graph is snapshot-only.
+2. Cloud gateway foundation exists, but full runtime enforcement across every skill is still incomplete.
+3. Perception graph has temporal baseline, but not a production detector/tracker feed.
 4. Skill executor is not yet plugin/runtime-dispatched by manifest.
 5. Clean V2 Android app is not buildable.
 6. YOLO26 integration is adapter-only and must stay separate from Ring.
 7. Replay/scorecard is in-memory only, although its schema surface now exists.
 8. Ops Console can drift into debug bloat if not kept schema-backed.
-9. Legacy reference paths can confuse contributors if not clearly labelled.
+9. Legacy dirty files can confuse contributors.
 10. No real RV101 signoff log exists for the clean V2 Android module yet.
 
 ## Recommended Next PRs
 
-1. `feat: add cloud evidence gateway runtime`
-2. `feat: make perception graph temporal and tracker-aware`
-3. `feat: make skill executor dispatch by manifest/runtime adapter`
+1. `feat: make skill executor dispatch by manifest/runtime adapter`
+2. `feat: add Vietnamese local router MVP`
+3. `feat: enforce cloud gateway for ambiguous skill verification`

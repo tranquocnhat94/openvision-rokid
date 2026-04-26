@@ -160,5 +160,5 @@ at least one score_session command exists
 logs are JSONL or similarly structured
 skill runs include latency/confidence/failure reason
 cloud calls include reason and latency
-developers can use replay to validate behavior without device access
+replay can validate behavior without device access
 ```

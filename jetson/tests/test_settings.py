@@ -26,6 +26,7 @@ class SettingsTest(unittest.TestCase):
             {
                 "OPENVISION_DEBUG_STT_ENABLED": "1",
                 "OPENVISION_DEBUG_STT_TRANSCRIBE_URL": "http://mini/inference",
+                "OPENVISION_DEBUG_STT_AUTH_TOKEN": "debug-token",
             },
             clear=True,
         ):
@@ -34,7 +35,44 @@ class SettingsTest(unittest.TestCase):
 
         self.assertTrue(runtime.debug_stt_enabled)
         self.assertEqual(runtime.debug_stt_transcribe_url, "http://mini/inference")
+        self.assertEqual(runtime.debug_stt_auth_token, "debug-token")
+        self.assertEqual(runtime.debug_stt_auth_token_source, "env")
+        self.assertEqual(runtime.debug_stt_min_audio_ms, 800)
         self.assertTrue(snapshot["debug_stt_enabled"])
+        self.assertEqual(snapshot["debug_stt_min_audio_ms"], 800)
+        self.assertNotIn("debug-token", str(snapshot))
+
+    def test_debug_stt_auth_token_can_load_from_file_without_snapshot_leak(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            token_path = Path(temp_dir) / "debug_stt_token"
+            token_path.write_text("file-token\n", encoding="utf-8")
+
+            with patch.dict(os.environ, {"OPENVISION_DEBUG_STT_AUTH_TOKEN_FILE": str(token_path)}, clear=True):
+                runtime = load_runtime_settings()
+                snapshot = load_settings()
+
+        self.assertEqual(runtime.debug_stt_auth_token, "file-token")
+        self.assertEqual(runtime.debug_stt_auth_token_source, "file")
+        self.assertNotIn("file-token", str(snapshot))
+
+    def test_realtime_max_output_tokens_is_configurable(self):
+        with patch.dict(os.environ, {"OPENVISION_REALTIME_MAX_OUTPUT_TOKENS": "64"}, clear=True):
+            runtime = load_runtime_settings()
+            snapshot = load_settings()
+
+        self.assertEqual(runtime.realtime_max_output_tokens, 64)
+        self.assertEqual(snapshot["realtime_max_output_tokens"], 64)
+
+    def test_realtime_voice_output_defaults_off_and_can_opt_in(self):
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(load_settings()["realtime_voice_output_enabled"])
+
+        with patch.dict(os.environ, {"OPENVISION_REALTIME_VOICE_OUTPUT_ENABLED": "1"}, clear=True):
+            runtime = load_runtime_settings()
+            snapshot = load_settings()
+
+        self.assertTrue(runtime.realtime_voice_output_enabled)
+        self.assertTrue(snapshot["realtime_voice_output_enabled"])
 
     def test_env_key_wins_over_file(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -1,7 +1,9 @@
 import asyncio
+import os
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agent"))
 
@@ -15,6 +17,7 @@ from openvision_jetson.rv101_tcp_ingest import (
     TYPE_VIDEO_HELLO,
     TYPE_VIDEO_SAMPLE,
     build_rvs1_frame,
+    load_rv101_tcp_ingest_settings,
 )
 
 
@@ -23,6 +26,7 @@ class Rv101TcpIngestTest(unittest.IsolatedAsyncioTestCase):
         events = InMemoryEventStore()
         media = MediaGateway(events=events)
         forwarded_audio = []
+        closed_audio_sessions = []
 
         async def on_audio(session_id, pcm_bytes):
             forwarded_audio.append((session_id, pcm_bytes))
@@ -38,6 +42,7 @@ class Rv101TcpIngestTest(unittest.IsolatedAsyncioTestCase):
                 audio_port=0,
             ),
             audio_pcm_handler=on_audio,
+            audio_close_handler=closed_audio_sessions.append,
         )
         await service.start()
         try:
@@ -100,6 +105,35 @@ class Rv101TcpIngestTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status["audio"]["chunk_count"], 1)
         self.assertEqual(status["audio"]["strong_chunk_count"], 1)
         self.assertEqual(forwarded_audio, [("sess_test", b"pcm")])
+        self.assertEqual(closed_audio_sessions, ["sess_test"])
+
+    async def test_wildcard_bind_auto_advertises_detected_lan_ip(self):
+        with patch.dict(
+            os.environ,
+            {
+                "OPENVISION_RV101_TCP_INGEST": "1",
+                "OPENVISION_RV101_BIND_HOST": "0.0.0.0",
+            },
+            clear=True,
+        ), patch("openvision_jetson.rv101_tcp_ingest._detect_lan_ip", return_value="192.168.8.178"):
+            settings = load_rv101_tcp_ingest_settings()
+
+        self.assertEqual(settings.bind_host, "0.0.0.0")
+        self.assertEqual(settings.advertised_host, "192.168.8.178")
+
+    async def test_explicit_advertised_host_overrides_auto_detection(self):
+        with patch.dict(
+            os.environ,
+            {
+                "OPENVISION_RV101_TCP_INGEST": "1",
+                "OPENVISION_RV101_BIND_HOST": "0.0.0.0",
+                "OPENVISION_RV101_ADVERTISED_HOST": "192.168.8.200",
+            },
+            clear=True,
+        ), patch("openvision_jetson.rv101_tcp_ingest._detect_lan_ip", return_value="192.168.8.178"):
+            settings = load_rv101_tcp_ingest_settings()
+
+        self.assertEqual(settings.advertised_host, "192.168.8.200")
 
 
 if __name__ == "__main__":

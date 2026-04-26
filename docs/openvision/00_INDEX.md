@@ -2,7 +2,7 @@
 
 This directory defines the architecture and execution path for OpenVision Rokid V2.
 
-## Reading order
+## Recommended reading order
 
 1. `01_NORTH_STAR_AND_PHILOSOPHY.md`
 2. `02_SYSTEM_ARCHITECTURE.md`
@@ -17,10 +17,10 @@ This directory defines the architecture and execution path for OpenVision Rokid 
 11. `11_PRIVACY_MEMORY_SAFETY.md`
 12. `12_BENCHMARKING_AND_REPLAY.md`
 13. `13_ROADMAP_AND_PR_SEQUENCE.md`
-14. `15_DO_NOT_BUILD_YET.md`
-15. `16_ACCEPTANCE_TESTS.md`
-16. `17_REPO_INVENTORY.md`
-17. `18_IMPLEMENTATION_PLAYBOOK.md`
+15. `15_DO_NOT_BUILD_YET.md`
+16. `16_ACCEPTANCE_TESTS.md`
+17. `17_REPO_INVENTORY.md`
+18. `18_IMPLEMENTATION_PLAYBOOK.md`
 
 ## V2 in one sentence
 

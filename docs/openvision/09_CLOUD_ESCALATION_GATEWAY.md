@@ -39,15 +39,18 @@ Example:
 ```json
 {
   "schema_version": "cloud_evidence_bundle.v1",
+  "bundle_id": "bundle_001",
   "session_id": "sess_001",
   "skill_id": "target_finder",
   "user_query": "tìm người áo vàng đeo balo",
-  "timestamp_ms": 1710000000000,
+  "created_at": "2026-04-25T00:00:00.000+00:00",
   "local_summary": {
     "scene": "street",
     "candidate_count": 3,
     "uncertainty": "shirt color and backpack ambiguous"
   },
+  "frame_refs": [],
+  "crop_refs": ["runtime/crops/person_3.jpg"],
   "candidates": [
     {
       "candidate_id": "track_person_3",
@@ -69,7 +72,8 @@ Example:
   "privacy": {
     "contains_face": true,
     "allow_cloud": true,
-    "store_result": false
+    "store_result": false,
+    "privacy_level": "medium"
   }
 }
 ```

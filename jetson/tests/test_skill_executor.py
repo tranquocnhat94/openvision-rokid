@@ -68,6 +68,9 @@ class SkillExecutorTest(unittest.TestCase):
         self.assertEqual(result["result"]["candidate_count"], 2)
         self.assertEqual(result["result"]["confirmed_match_count"], 0)
         self.assertEqual(result["result"]["cloud_attribute_resolution"], "required")
+        self.assertEqual(result["result"]["cloud_evidence_bundle"]["schema_version"], "cloud_evidence_bundle.v1")
+        self.assertEqual(result["result"]["cloud_gateway"]["status"], "error")
+        self.assertEqual(result["result"]["cloud_result"]["error"]["code"], "cloud_provider_missing")
         self.assertIn("chưa xác minh", result["result"]["user_message"])
         self.assertEqual(
             result["result"]["candidates"][0]["match_status"],
@@ -101,6 +104,53 @@ class SkillExecutorTest(unittest.TestCase):
         self.assertEqual(result["result"]["candidate_semantics"], "label_matches")
         self.assertEqual(result["result"]["confirmed_match_count"], 1)
         self.assertEqual(len(result["result"]["hud"]["thumbnails"]), 1)
+
+    def test_manifest_input_schema_is_enforced_before_execution(self):
+        executor = SkillExecutor(
+            perception=PerceptionGraph(events=InMemoryEventStore()),
+            events=InMemoryEventStore(),
+        )
+
+        bad_confidence = executor.execute(
+            name="count_people",
+            args={"min_confidence": "abc"},
+            session_id="sess_test",
+        )
+        too_many_candidates = executor.execute(
+            name="search_targets",
+            args={"query": "người", "max_candidates": 999},
+            session_id="sess_test",
+        )
+        missing_query = executor.execute(
+            name="search_targets",
+            args={},
+            session_id="sess_test",
+        )
+
+        self.assertEqual(bad_confidence["status"], "error")
+        self.assertEqual(bad_confidence["error"]["code"], "invalid_skill_args")
+        self.assertIn("args.min_confidence must be number", bad_confidence["error"]["details"])
+        self.assertIn("args.max_candidates must be <= 8", too_many_candidates["error"]["details"])
+        self.assertIn("args.query is required", missing_query["error"]["details"])
+
+    def test_select_and_clear_target_emit_hud_contracts(self):
+        executor = SkillExecutor(
+            perception=PerceptionGraph(events=InMemoryEventStore()),
+            events=InMemoryEventStore(),
+        )
+
+        selected = executor.execute(
+            name="select_target",
+            args={"target_id": "obj_person_1", "reason": "user pointed"},
+            session_id="sess_test",
+        )
+        cleared = executor.execute(name="clear_target", args={}, session_id="sess_test")
+
+        self.assertEqual(selected["status"], "ok")
+        self.assertEqual(selected["result"]["hud"]["target_hint"]["target_id"], "obj_person_1")
+        self.assertEqual(selected["result"]["hud_hint"]["status"], "selected")
+        self.assertEqual(cleared["status"], "ok")
+        self.assertEqual(cleared["result"]["hud"]["edge_chips"], ["target_clear"])
 
 
 if __name__ == "__main__":

@@ -5,12 +5,17 @@ const ui = {
   answer: document.querySelector("#hudAnswer"),
   chips: document.querySelector("#hudChips"),
   thumbs: document.querySelector("#hudThumbs"),
+  voice: document.querySelector("#voiceToggle"),
 };
 
 let sessionId = null;
 let peer = null;
+let activeMedia = null;
 let hudPollTimer = null;
 let lastSceneId = null;
+let voiceSocket = null;
+let voiceAudioContext = null;
+let voicePlayhead = 0;
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -93,7 +98,17 @@ async function startMedia() {
     },
   });
   ui.preview.srcObject = media;
+  activeMedia = media;
   return media;
+}
+
+function stopMedia() {
+  if (!activeMedia) return;
+  for (const track of activeMedia.getTracks()) {
+    track.stop();
+  }
+  activeMedia = null;
+  ui.preview.srcObject = null;
 }
 
 async function connectWebRtc(media) {
@@ -121,8 +136,63 @@ async function connectWebRtc(media) {
 async function startRealtime() {
   await api(`/api/realtime/${sessionId}/start`, {
     method: "POST",
-    body: JSON.stringify({ turn_policy: "server_vad", output_modalities: ["text"] }),
+    body: JSON.stringify({
+      turn_policy: "server_vad",
+      voice_output: Boolean(ui.voice?.checked),
+    }),
   });
+}
+
+async function connectVoiceOutput() {
+  if (!ui.voice?.checked || !sessionId) return;
+  voiceAudioContext = voiceAudioContext || new AudioContext();
+  if (voiceAudioContext.state === "suspended") {
+    await voiceAudioContext.resume();
+  }
+  voicePlayhead = Math.max(voiceAudioContext.currentTime, voicePlayhead);
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  voiceSocket = new WebSocket(`${protocol}//${window.location.host}/ws/realtime/${encodeURIComponent(sessionId)}/audio`);
+  voiceSocket.addEventListener("message", (event) => {
+    let message;
+    try {
+      message = JSON.parse(event.data);
+    } catch (_error) {
+      return;
+    }
+    if (message.type === "audio_delta" && typeof message.audio_base64 === "string") {
+      playPcm16(message.audio_base64, Number(message.sample_rate) || 24000);
+    }
+  });
+}
+
+function disconnectVoiceOutput() {
+  if (voiceSocket) {
+    voiceSocket.close();
+    voiceSocket = null;
+  }
+  voicePlayhead = 0;
+}
+
+function playPcm16(audioBase64, sampleRate) {
+  if (!voiceAudioContext) return;
+  const binary = window.atob(audioBase64);
+  const sampleCount = Math.floor(binary.length / 2);
+  if (sampleCount <= 0) return;
+  const audioBuffer = voiceAudioContext.createBuffer(1, sampleCount, sampleRate);
+  const samples = audioBuffer.getChannelData(0);
+  for (let index = 0; index < sampleCount; index += 1) {
+    const lo = binary.charCodeAt(index * 2);
+    const hi = binary.charCodeAt(index * 2 + 1);
+    let value = (hi << 8) | lo;
+    if (value >= 0x8000) value -= 0x10000;
+    samples[index] = Math.max(-1, Math.min(1, value / 32768));
+  }
+  const source = voiceAudioContext.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(voiceAudioContext.destination);
+  const startAt = Math.max(voiceAudioContext.currentTime + 0.02, voicePlayhead);
+  source.start(startAt);
+  voicePlayhead = startAt + audioBuffer.duration;
 }
 
 async function loadHud() {
@@ -160,14 +230,21 @@ ui.start.addEventListener("click", async () => {
       ui.start.hidden = false;
       return;
     }
-    await createSession();
-    await startRealtime();
+    setState("Requesting camera");
     const media = await startMedia();
+    setState("Creating session");
+    await createSession();
+    setState("Starting realtime");
+    await startRealtime();
+    await connectVoiceOutput();
+    setState("Connecting media");
     await connectWebRtc(media);
     await loadHud();
     startHudPolling();
     setState("Connected");
   } catch (error) {
+    disconnectVoiceOutput();
+    stopMedia();
     setState("Error");
     ui.answer.textContent = error.message;
     ui.start.hidden = false;

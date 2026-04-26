@@ -30,8 +30,9 @@ class DebugSttSettings:
     vad_filter: bool = True
     hotwords: str = ""
     timeout_s: float = 20.0
-    min_audio_ms: int = 350
+    min_audio_ms: int = 800
     max_audio_ms: int = 12_000
+    auth_token: str | None = None
 
 
 @dataclass(slots=True)
@@ -61,19 +62,38 @@ class DebugSttRuntime:
         self._entries: list[dict[str, Any]] = []
         self._tasks: set[asyncio.Task[None]] = set()
         self._last_error: str | None = None
+        self._last_health_ok: bool | None = None
+        self._last_health_at: str | None = None
+        self._last_health_error: str | None = None
+        self._last_health_payload: dict[str, Any] | None = None
 
     def status(self) -> dict[str, Any]:
         settings = self._settings_provider()
         configured = bool(settings.transcribe_url and settings.health_url and settings.warm_url)
+        if not settings.enabled:
+            status = "disabled"
+        elif not configured:
+            status = "misconfigured"
+        elif self._last_health_ok is False:
+            status = "health_error"
+        else:
+            status = "enabled"
         return {
             "enabled": settings.enabled,
-            "status": "enabled" if settings.enabled and configured else "misconfigured" if settings.enabled else "disabled",
+            "status": status,
             "backend": "phowhisper_http",
             "transcribe_url": settings.transcribe_url if settings.enabled else None,
             "health_url": settings.health_url if settings.enabled else None,
             "turn_buffers": len(self._buffers),
             "transcript_count": len(self._entries),
             "last_error": self._last_error,
+            "last_health_ok": self._last_health_ok,
+            "last_health_at": self._last_health_at,
+            "last_health_error": self._last_health_error,
+            "model_loaded": (self._last_health_payload or {}).get("modelLoaded"),
+            "auth_configured": bool(settings.auth_token),
+            "min_audio_ms": settings.min_audio_ms,
+            "max_audio_ms": settings.max_audio_ms,
         }
 
     def transcripts(self, *, session_id: str | None = None, limit: int = 30) -> list[dict[str, Any]]:
@@ -118,28 +138,75 @@ class DebugSttRuntime:
             buffer = self._buffers.pop(session_id, None)
             if not buffer:
                 return
-            pcm = b"".join(buffer.chunks)
-            duration_ms = _duration_ms(pcm, sample_rate=buffer.sample_rate, channels=buffer.channels)
-            if duration_ms < settings.min_audio_ms:
-                self._events.add(
-                    "debug_stt",
-                    "turn_too_short",
-                    {"duration_ms": duration_ms, "source": buffer.source},
-                    session_id=session_id,
-                )
-                return
-            wav_bytes = pcm16_to_wav_16k_mono(pcm, sample_rate=buffer.sample_rate, channels=buffer.channels)
-            task = asyncio.create_task(
-                self._transcribe_turn(
-                    session_id=session_id,
-                    wav_bytes=wav_bytes,
-                    duration_ms=duration_ms,
-                    source=buffer.source,
-                    settings=settings,
-                )
+            self._submit_buffer(
+                session_id=session_id,
+                buffer=buffer,
+                settings=settings,
+                reason="closed",
             )
-            self._tasks.add(task)
-            task.add_done_callback(self._tasks.discard)
+
+    def flush_session(self, session_id: str, *, reason: str = "stream_closed") -> bool:
+        settings = self._settings_provider()
+        buffer = self._buffers.pop(session_id, None)
+        if not buffer:
+            return False
+        if not settings.enabled:
+            self._events.add(
+                "debug_stt",
+                "turn_discarded",
+                {"reason": reason, "source": buffer.source},
+                session_id=session_id,
+            )
+            return True
+        self._events.add(
+            "debug_stt",
+            "turn_flushed",
+            {"reason": reason, "source": buffer.source},
+            session_id=session_id,
+        )
+        self._submit_buffer(
+            session_id=session_id,
+            buffer=buffer,
+            settings=settings,
+            reason=reason,
+        )
+        return True
+
+    def _submit_buffer(
+        self,
+        *,
+        session_id: str,
+        buffer: _TurnBuffer,
+        settings: DebugSttSettings,
+        reason: str,
+    ) -> None:
+        pcm = b"".join(buffer.chunks)
+        duration_ms = _duration_ms(pcm, sample_rate=buffer.sample_rate, channels=buffer.channels)
+        if duration_ms < settings.min_audio_ms:
+            self._events.add(
+                "debug_stt",
+                "turn_too_short",
+                {
+                    "duration_ms": duration_ms,
+                    "min_audio_ms": settings.min_audio_ms,
+                    "source": buffer.source,
+                    "reason": reason,
+                },
+                session_id=session_id,
+            )
+            return
+        wav_bytes = pcm16_to_wav_16k_mono(pcm, sample_rate=buffer.sample_rate, channels=buffer.channels)
+        task = asyncio.create_task(
+            self._transcribe_turn(
+                session_id=session_id,
+                wav_bytes=wav_bytes,
+                duration_ms=duration_ms,
+                source=buffer.source,
+                settings=settings,
+            )
+        )
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
 
     async def warm(self) -> dict[str, Any]:
         settings = self._settings_provider()
@@ -147,12 +214,64 @@ class DebugSttRuntime:
             return {"enabled": False, "status": "disabled"}
         if not settings.warm_url:
             return {"enabled": True, "status": "misconfigured", "error": "OPENVISION_DEBUG_STT_WARM_URL is required"}
-        async with httpx.AsyncClient(timeout=settings.timeout_s) as client:
-            response = await client.get(settings.warm_url)
-            response.raise_for_status()
-            payload = response.json()
+        try:
+            async with httpx.AsyncClient(timeout=settings.timeout_s) as client:
+                response = await client.get(settings.warm_url, headers=_auth_headers(settings))
+                response.raise_for_status()
+                payload = response.json()
+        except Exception as exc:
+            self._last_error = f"{exc.__class__.__name__}: {exc}"
+            self._events.add(
+                "debug_stt",
+                "warm_error",
+                {"error": self._last_error},
+                severity="warning",
+            )
+            raise
+        self._last_error = None
+        self._last_health_ok = True
+        self._last_health_at = utc_now()
+        self._last_health_error = None
+        self._last_health_payload = payload if isinstance(payload, dict) else None
         self._events.add("debug_stt", "warmed", {"backend": payload.get("backend"), "modelLoaded": payload.get("modelLoaded")})
         return payload
+
+    async def check_health(self) -> dict[str, Any]:
+        settings = self._settings_provider()
+        if not settings.enabled:
+            return self.status()
+        if not settings.health_url:
+            self._last_health_ok = False
+            self._last_health_at = utc_now()
+            self._last_health_error = "OPENVISION_DEBUG_STT_HEALTH_URL is required"
+            return self.status()
+        try:
+            async with httpx.AsyncClient(timeout=min(settings.timeout_s, 2.0)) as client:
+                response = await client.get(settings.health_url, headers=_auth_headers(settings))
+                response.raise_for_status()
+                payload = response.json()
+        except Exception as exc:
+            self._last_health_ok = False
+            self._last_health_at = utc_now()
+            self._last_health_error = f"{exc.__class__.__name__}: {exc}"
+            self._last_health_payload = None
+            self._events.add(
+                "debug_stt",
+                "health_error",
+                {"error": self._last_health_error},
+                severity="warning",
+            )
+            return self.status()
+        self._last_health_ok = True
+        self._last_health_at = utc_now()
+        self._last_health_error = None
+        self._last_health_payload = payload if isinstance(payload, dict) else None
+        self._events.add(
+            "debug_stt",
+            "health_ok",
+            {"backend": payload.get("backend"), "modelLoaded": payload.get("modelLoaded")},
+        )
+        return self.status()
 
     async def wait_for_idle(self) -> None:
         while self._tasks:
@@ -172,6 +291,15 @@ class DebugSttRuntime:
             payload = await self._http_post(settings, wav_bytes, session_id)
             text = str(payload.get("text") or "").strip()
             wall_ms = int((time.perf_counter() - started) * 1000)
+            if not text:
+                self._last_error = None
+                self._events.add(
+                    "debug_stt",
+                    "empty_transcript_dropped",
+                    {"duration_ms": duration_ms, "wall_ms": wall_ms, "source": source},
+                    session_id=session_id,
+                )
+                return
             entry = {
                 "session_id": session_id,
                 "text": text,
@@ -220,6 +348,7 @@ def load_debug_stt_settings() -> DebugSttSettings:
         timeout_s=runtime.debug_stt_timeout_s,
         min_audio_ms=runtime.debug_stt_min_audio_ms,
         max_audio_ms=runtime.debug_stt_max_audio_ms,
+        auth_token=runtime.debug_stt_auth_token,
     )
 
 
@@ -256,10 +385,20 @@ async def _post_wav_to_worker(settings: DebugSttSettings, wav_bytes: bytes, sess
     }
     if settings.hotwords.strip():
         headers["X-Rokid-Hotwords-Base64"] = base64.b64encode(settings.hotwords.strip().encode("utf-8")).decode("ascii")
+    headers.update(_auth_headers(settings))
     async with httpx.AsyncClient(timeout=settings.timeout_s) as client:
         response = await client.post(settings.transcribe_url, content=wav_bytes, headers=headers)
         response.raise_for_status()
         return response.json()
+
+
+def _auth_headers(settings: DebugSttSettings) -> dict[str, str]:
+    token = (settings.auth_token or "").strip()
+    if not token:
+        return {}
+    return {
+        "X-OpenVision-Debug-STT-Token": token,
+    }
 
 
 def _duration_ms(pcm: bytes, *, sample_rate: int, channels: int) -> int:

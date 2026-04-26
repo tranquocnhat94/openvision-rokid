@@ -19,6 +19,7 @@ The deploy script preserves Jetson-local runtime state:
 
 - `.venv/`
 - `runtime/`
+- `ops/openvision.env`
 - `ops/secrets/`
 
 ## Current v2 URLs
@@ -80,6 +81,15 @@ OPENVISION_YOLO26_MODE=external_snapshot
 
 The external runtime posts normalized detections into v2, and v2 updates the perception graph plus HUD-facing skill layer. Do not point v2 at the Ring runtime process.
 
+Snapshot `source` must identify a separate Rokid/OpenVision runtime, for example:
+
+```text
+rokid_yolo26_external
+openvision_yolo26_lab
+```
+
+Sources containing Ring/security markers are rejected by the adapter.
+
 ## RV101 Media Ingest
 
 v2 now exposes the product-shaped RV101 control/media contract:
@@ -105,4 +115,4 @@ Do not stop or delete v1 from Jetson until v2 has passed:
 - YOLO26 adapter is either disabled or explicitly pointed at a separate Rokid-specific runtime/snapshot source;
 - no Ring / YOLO26 security runtime is affected.
 
-After those gates pass, stop/delete only the known v1 Rokid service/files. Do not stop Ring / YOLO26 security services. Use `docs/openvision/16_ACCEPTANCE_TESTS.md`, `the current project status docs`, and a fresh Jetson log as the retirement gate.
+After those gates pass, stop/delete only the known v1 Rokid service/files. Do not stop Ring / YOLO26 security services. Use `docs/openvision/16_ACCEPTANCE_TESTS.md`, current project status docs, and a fresh Jetson log as the retirement gate.

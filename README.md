@@ -49,11 +49,20 @@ This is an active research/build project. Expect rapid iteration, hardware-speci
 The active public direction is **V2 local-first Skill OS**.
 
 ```text
-Current phase: Phase 1 — Reliability Baseline
-Completed foundation: Phase 0 docs, schemas, runtime skeletons, replay/scorecard base
-Current checkpoint: structured scorecard gates are in place
-Next checkpoint: stream metrics baseline, then audio metrics and HUD validation
+Current phase: Phase 3 — Skill Runtime + Vietnamese Voice Router
+Completed foundation: Phase 0 docs/schemas, Phase 1 reliability baseline, Phase 2 perception graph MVP
+Current checkpoint: skill runtime hardening and Realtime tool discipline
+Next checkpoint: manifest-backed dispatch, Vietnamese local routing, and cloud-gateway enforcement
 ```
+
+Recent public progress:
+
+- Stream, audio, HUD, replay, and scorecard baselines are now measurable.
+- Perception graph snapshots now include zones, frame dimensions, object ages, and temporal continuity.
+- YOLO26 reuse is isolated behind a disabled-by-default Rokid/OpenVision adapter.
+- Realtime handling now preserves richer HUD output, schedules tool calls off the receive loop, supports optional voice output, and surfaces output-audio transcripts.
+- Debug STT is still sidecar-only, with lifecycle/auth hardening and mini PC helper scripts.
+- A cloud evidence gateway foundation now validates bundles/results, enforces privacy and request budget gates, and falls back safely when no verifier is configured.
 
 The immediate rule for the project is:
 
@@ -590,23 +599,22 @@ flowchart TD
     P1C["Phase 1.3<br/>audio metrics"]
     P1D["Phase 1.4<br/>HUD validation"]
     P2["Phase 2<br/>perception graph MVP"]
-    P3["Phase 3<br/>skill runtime MVP"]
-    P4["Phase 4<br/>HUD scene protocol"]
-    P5["Phase 5<br/>first four skills"]
-    P6["Phase 6<br/>cloud escalation gateway"]
-    P7["Phase 7<br/>Reality Radar MVP"]
-    P8["Phase 8<br/>memory + task coaching"]
-    P9["Phase 9<br/>dashboard + data flywheel"]
+    P3["Phase 3<br/>skill runtime + voice router"]
+    P4["Phase 4<br/>first four skills"]
+    P5["Phase 5<br/>cloud gateway enforcement"]
+    P6["Phase 6<br/>Reality Radar MVP"]
+    P7["Phase 7<br/>memory + task coaching"]
+    P8["Phase 8<br/>dashboard + data flywheel"]
 
-    P0 --> P1A --> P1B --> P1C --> P1D --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8 --> P9
+    P0 --> P1A --> P1B --> P1C --> P1D --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8
 
     classDef done fill:#d9fbe5,stroke:#2f855a,color:#102a1f;
     classDef current fill:#fff3bf,stroke:#b7791f,color:#2f2400;
     classDef next fill:#e7f5ff,stroke:#2b6cb0,color:#102a43;
 
-    class P0,P1A done;
-    class P1B current;
-    class P1C,P1D,P2,P3,P4,P5,P6,P7,P8,P9 next;
+    class P0,P1A,P1B,P1C,P1D,P2 done;
+    class P3 current;
+    class P4,P5,P6,P7,P8 next;
 ```
 
 Current public checkpoint:
@@ -615,9 +623,13 @@ Current public checkpoint:
 |---|---|
 | Phase 0 V2 foundation | Done |
 | Phase 1.1 structured scorecard gates | Done |
-| Phase 1.2 stream metrics baseline | Current |
-| Phase 1.3 audio metrics baseline | Next |
-| Phase 1.4 HUD validation | Next |
+| Phase 1.2 stream metrics baseline | Done |
+| Phase 1.3 audio metrics baseline | Done |
+| Phase 1.4 HUD validation | Done |
+| Phase 2 perception graph MVP | Done |
+| Cloud gateway foundation | Landed |
+| Phase 3 skill runtime + voice router | Current |
+| Phase 4 first practical skills | Next |
 
 ### Phase 0 — V2 Foundation
 
@@ -650,7 +662,7 @@ Goal: create one shared world state.
 - Timestamps and confidence.
 - JSON schema validation.
 
-### Phase 3 — Skill Runtime MVP
+### Phase 3 — Skill Runtime + Voice Router
 
 Goal: stop building disconnected features.
 
@@ -660,18 +672,7 @@ Goal: stop building disconnected features.
 - Skill input/output contract.
 - First local skill execution path.
 
-### Phase 4 — HUD Scene Protocol
-
-Goal: make the glasses a thin display endpoint.
-
-- Versioned HUD schema.
-- Short text strips.
-- Target hints.
-- Alerts.
-- Debug overlays.
-- Priority and duration rules.
-
-### Phase 5 — First Four Skills
+### Phase 4 — First Four Skills
 
 Goal: prove practical value.
 
@@ -680,7 +681,7 @@ Goal: prove practical value.
 - `text_reader`
 - `object_counter`
 
-### Phase 6 — Cloud Escalation Gateway
+### Phase 5 — Cloud Escalation Gateway
 
 Goal: use cloud AI intelligently.
 
@@ -691,7 +692,7 @@ Goal: use cloud AI intelligently.
 - Caching.
 - Privacy filters.
 
-### Phase 7 — Reality Radar MVP
+### Phase 6 — Reality Radar MVP
 
 Goal: build the flagship experience.
 
@@ -702,7 +703,7 @@ Goal: build the flagship experience.
 - Cloud verification for ambiguous cases.
 - Tiny HUD directional cue.
 
-### Phase 8 — Memory + Task Coaching
+### Phase 7 — Memory + Task Coaching
 
 Goal: make the system useful over time.
 
@@ -712,7 +713,7 @@ Goal: make the system useful over time.
 - Step-by-step guidance.
 - Deletion/export controls.
 
-### Phase 9 — Dashboard + Data Flywheel
+### Phase 8 — Dashboard + Data Flywheel
 
 Goal: improve the system through real usage.
 

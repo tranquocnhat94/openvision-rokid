@@ -31,6 +31,15 @@
             "maxItems": 4
           },
           "track_id": {"type": ["string", "null"]},
+          "zone": {
+            "type": ["string", "null"],
+            "enum": ["left", "left_front", "front", "right_front", "right", "near", "far", "unknown", null]
+          },
+          "first_seen_at": {"type": ["string", "null"]},
+          "last_seen_at": {"type": ["string", "null"]},
+          "age_ms": {"type": "integer", "minimum": 0},
+          "frame_width": {"type": ["integer", "null"], "minimum": 1},
+          "frame_height": {"type": ["integer", "null"], "minimum": 1},
           "attributes": {"type": "object"},
           "crop_ref": {"type": ["string", "null"]}
         }

@@ -11,6 +11,7 @@ from pathlib import Path
 _JETSON_ROOT = Path(__file__).resolve().parents[2]
 _MODULE_FOLDERS = (
     "audio_turns",
+    "cloud_gateway",
     "hud_authority",
     "lab_fallbacks",
     "media_gateway",

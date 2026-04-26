@@ -38,8 +38,9 @@ Docs/foundation complete when:
 
 ```text
 openvision docs exist
+phase prompts exist
 schema specs exist
-developers can summarize phase order correctly
+Contributors can summarize phase order correctly
 ```
 
 ## Phase 1 tests

@@ -90,6 +90,32 @@ class SharedSchemasTest(unittest.TestCase):
         )
 
         self.assertEqual(payload["schema_version"], "perception_snapshot.v1")
+        obj = payload["objects"][0]
+        self.assertEqual(obj["zone"], "front")
+        self.assertEqual(obj["first_seen_at"], payload["created_at"])
+        self.assertEqual(obj["last_seen_at"], payload["created_at"])
+        self.assertEqual(obj["age_ms"], 0)
+        self.assertEqual(obj["frame_width"], 640)
+        self.assertEqual(obj["frame_height"], 480)
+        assert_required_fields(self, load_schema("perception_graph.schema.json"), payload)
+
+    def test_perception_graph_optional_object_fields_are_schema_safe(self):
+        graph = PerceptionGraph(events=InMemoryEventStore())
+        payload = graph.update_snapshot(
+            session_id="sess_test",
+            source="unit",
+            detections=[{"name": "Phone", "score": 1.5, "bbox": [1, 2, 3]}],
+        )
+
+        obj = payload["objects"][0]
+        self.assertEqual(obj["label"], "phone")
+        self.assertEqual(obj["confidence"], 1.0)
+        self.assertIsNone(obj["bbox"])
+        self.assertIsNone(obj["track_id"])
+        self.assertEqual(obj["zone"], "unknown")
+        self.assertIsNone(obj["frame_width"])
+        self.assertIsNone(obj["frame_height"])
+        self.assertEqual(obj["age_ms"], 0)
         assert_required_fields(self, load_schema("perception_graph.schema.json"), payload)
 
     def test_replay_and_scorecard_payloads_match_schema_surface(self):

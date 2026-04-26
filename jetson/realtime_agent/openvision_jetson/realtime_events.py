@@ -12,6 +12,8 @@ from .contracts import new_id
 SYSTEM_INSTRUCTIONS = """
 Bạn là OpenVision Rokid, agent AI vision-first cho kính Rokid.
 Hiểu tiếng Việt tự nhiên, trả lời ngắn gọn để phù hợp HUD kính.
+Mặc định trả lời một câu tiếng Việt dưới 16 từ cho HUD, trừ khi người dùng
+yêu cầu chi tiết. Nếu cần liệt kê, tối đa 3 ý ngắn.
 Jetson là runtime đáng tin cậy cho media, perception graph, selected target,
 typed skills và HUD; bạn chỉ được nói chắc những gì Jetson tool đã xác nhận.
 Khi người dùng hỏi về cảnh trước mặt, số người, đối tượng, tìm mục tiêu,
@@ -32,7 +34,7 @@ def turn_detection_for(policy: str) -> dict[str, Any] | None:
             "type": "server_vad",
             "threshold": 0.5,
             "prefix_padding_ms": 300,
-            "silence_duration_ms": 500,
+            "silence_duration_ms": 650,
             "create_response": True,
             "interrupt_response": False,
         }
@@ -53,6 +55,7 @@ def session_update_event(
     tools: list[dict[str, Any]],
     turn_policy: str,
     output_modalities: list[str],
+    max_output_tokens: int | None = 96,
 ) -> dict[str, Any]:
     audio_input: dict[str, Any] = {
         "format": {
@@ -65,27 +68,31 @@ def session_update_event(
         "turn_detection": turn_detection_for(turn_policy),
     }
 
+    session: dict[str, Any] = {
+        "type": "realtime",
+        "model": model,
+        "output_modalities": output_modalities,
+        "instructions": SYSTEM_INSTRUCTIONS,
+        "audio": {
+            "input": audio_input,
+            "output": {
+                "format": {
+                    "type": "audio/pcm",
+                    "rate": 24000,
+                },
+                "voice": voice,
+            },
+        },
+        "tools": tools,
+        "tool_choice": "auto",
+    }
+    if max_output_tokens is not None:
+        session["max_output_tokens"] = max_output_tokens
+
     return {
         "event_id": new_id("rt_client"),
         "type": "session.update",
-        "session": {
-            "type": "realtime",
-            "model": model,
-            "output_modalities": output_modalities,
-            "instructions": SYSTEM_INSTRUCTIONS,
-            "audio": {
-                "input": audio_input,
-                "output": {
-                    "format": {
-                        "type": "audio/pcm",
-                        "rate": 24000,
-                    },
-                    "voice": voice,
-                },
-            },
-            "tools": tools,
-            "tool_choice": "auto",
-        },
+        "session": session,
     }
 
 

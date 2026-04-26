@@ -16,7 +16,9 @@ from .contracts import to_jsonable
 from .event_store import InMemoryEventStore
 
 
-VALID_MODES = {"disabled", "external_snapshot", "inline_trt"}
+VALID_MODES = {"disabled", "external_snapshot"}
+ALLOWED_SOURCE_MARKERS = ("rokid", "openvision")
+FORBIDDEN_SOURCE_MARKERS = ("ring", "security", "surveillance")
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,11 +54,12 @@ class Yolo26RokidAdapter:
     def validate_external_snapshot(self, *, source: str) -> dict[str, Any]:
         settings = load_yolo26_adapter_settings()
         status = _build_status(settings)
+        clean_source = _clean_source(source)
         if status.status == "disabled":
             self._events.add(
                 "adapter.yolo26",
                 "snapshot_rejected",
-                {"reason": "adapter_disabled", "source": source},
+                {"reason": "adapter_disabled", "source": clean_source},
                 severity="warning",
             )
             return {
@@ -70,7 +73,7 @@ class Yolo26RokidAdapter:
             self._events.add(
                 "adapter.yolo26",
                 "snapshot_rejected",
-                {"reason": "invalid_config", "mode": settings.mode, "source": source},
+                {"reason": "invalid_config", "mode": settings.mode, "source": clean_source},
                 severity="error",
             )
             return {
@@ -80,12 +83,29 @@ class Yolo26RokidAdapter:
                     "message": status.message,
                 },
             }
+        source_error = _validate_external_source(clean_source)
+        if source_error:
+            self._events.add(
+                "adapter.yolo26",
+                "snapshot_rejected",
+                {"reason": source_error["code"], "source": clean_source},
+                severity="warning",
+            )
+            return {"status": "error", "error": source_error}
         return {
             "status": "accepted",
-            "source": f"yolo26_rokid:{source}",
+            "source": f"yolo26_rokid:{clean_source}",
             "min_confidence": settings.min_confidence,
             "adapter": to_jsonable(status),
         }
+
+    def filter_detections(self, detections: list[dict[str, Any]], *, min_confidence: float) -> list[dict[str, Any]]:
+        return [
+            dict(item)
+            for item in detections
+            if isinstance(item, dict)
+            and _detection_confidence(item) >= min_confidence
+        ]
 
 
 def load_yolo26_adapter_settings() -> Yolo26AdapterSettings:
@@ -112,12 +132,9 @@ def _build_status(settings: Yolo26AdapterSettings) -> Yolo26AdapterStatus:
     elif settings.mode == "external_snapshot":
         status = "ready"
         message = "Ready to accept snapshots from a separate Rokid YOLO26 runtime."
-    elif engine_exists and labels_exists:
-        status = "configured"
-        message = "Inline TensorRT mode is configured but not started by this v2 service."
     else:
         status = "invalid"
-        message = "Inline TensorRT mode requires separate Rokid engine and labels paths."
+        message = "YOLO26 v2 only supports disabled or external_snapshot mode; it never starts or binds detector processes."
 
     return Yolo26AdapterStatus(
         name="yolo26_rokid",
@@ -140,6 +157,31 @@ def _clean_path(value: str | None) -> str | None:
     return cleaned or None
 
 
+def _clean_source(value: str | None) -> str:
+    if not value:
+        return ""
+    return value.strip().lower().replace(" ", "_")
+
+
+def _validate_external_source(source: str) -> dict[str, str] | None:
+    if not source:
+        return {
+            "code": "missing_snapshot_source",
+            "message": "YOLO26 snapshot source is required and must identify the separate Rokid runtime.",
+        }
+    if any(marker in source for marker in FORBIDDEN_SOURCE_MARKERS):
+        return {
+            "code": "forbidden_snapshot_source",
+            "message": "YOLO26 snapshots from Ring/security runtimes are not accepted by OpenVision v2.",
+        }
+    if not any(marker in source for marker in ALLOWED_SOURCE_MARKERS):
+        return {
+            "code": "invalid_snapshot_source",
+            "message": "YOLO26 snapshot source must identify a separate Rokid/OpenVision runtime.",
+        }
+    return None
+
+
 def _exists(path: str | None) -> bool:
     return bool(path and Path(path).expanduser().exists())
 
@@ -151,3 +193,11 @@ def _to_float(value: str | None, default: float) -> float:
         return float(value)
     except ValueError:
         return default
+
+
+def _detection_confidence(item: dict[str, Any]) -> float:
+    value = item.get("confidence", item.get("score", 0.0))
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0

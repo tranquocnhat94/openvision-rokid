@@ -23,11 +23,12 @@ class RealtimeEventsTest(unittest.TestCase):
         self.assertEqual(policy["eagerness"], "low")
         self.assertFalse(policy["interrupt_response"])
 
-    def test_server_vad_does_not_interrupt_active_response(self):
+    def test_server_vad_does_not_cancel_active_response(self):
         policy = turn_detection_for("server_vad")
         self.assertEqual(policy["type"], "server_vad")
         self.assertTrue(policy["create_response"])
         self.assertFalse(policy["interrupt_response"])
+        self.assertEqual(policy["silence_duration_ms"], 650)
 
     def test_session_update_registers_tools(self):
         event = session_update_event(
@@ -41,12 +42,25 @@ class RealtimeEventsTest(unittest.TestCase):
         self.assertEqual(event["type"], "session.update")
         self.assertEqual(event["session"]["model"], "gpt-realtime-1.5")
         self.assertEqual(event["session"]["tools"][0]["name"], "count_people")
+        self.assertEqual(event["session"]["max_output_tokens"], 96)
         self.assertIsNone(event["session"]["audio"]["input"]["turn_detection"])
         self.assertEqual(event["session"]["audio"]["input"]["format"]["rate"], 24000)
         self.assertEqual(event["session"]["audio"]["output"]["format"]["rate"], 24000)
         self.assertNotIn("transcription", event["session"]["audio"]["input"])
         self.assertIn("needs_cloud", event["session"]["instructions"])
         self.assertIn("candidate", event["session"]["instructions"])
+
+    def test_session_update_can_omit_output_token_cap(self):
+        event = session_update_event(
+            model="gpt-realtime-1.5",
+            voice="marin",
+            tools=[],
+            turn_policy="manual",
+            output_modalities=["text"],
+            max_output_tokens=None,
+        )
+
+        self.assertNotIn("max_output_tokens", event["session"])
 
     def test_audio_append_base64_encodes_pcm(self):
         event = append_audio_event(b"\x00\x01")

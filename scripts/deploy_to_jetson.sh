@@ -9,6 +9,7 @@ JETSON_PATH="${JETSON_PATH:-/opt/openvision-rokid}"
 rsync -az --delete \
   --exclude ".venv/" \
   --exclude "runtime/" \
+  --exclude "ops/openvision.env" \
   --exclude "ops/secrets/" \
   --exclude "__pycache__/" \
   --exclude ".DS_Store" \

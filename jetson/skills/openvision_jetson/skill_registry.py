@@ -34,6 +34,12 @@ class SkillRegistry:
     def get(self, name: str) -> SkillDefinition | None:
         return self._skills.get(name)
 
+    def validate_args(self, name: str, args: dict[str, Any]) -> list[str]:
+        definition = self.get(name)
+        if definition is None:
+            return [f"unknown skill: {name}"]
+        return validate_json_value(definition.input_schema, args, path="args")
+
     def dry_run(
         self,
         name: str,
@@ -130,3 +136,90 @@ def _string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item).strip() for item in value if str(item).strip()]
+
+
+def validate_json_value(schema: dict[str, Any], value: Any, *, path: str = "value") -> list[str]:
+    errors: list[str] = []
+    if "const" in schema and value != schema["const"]:
+        errors.append(f"{path} must equal {schema['const']}")
+    expected_type = schema.get("type")
+    if expected_type and not _matches_json_type(value, expected_type):
+        return [f"{path} must be {_type_label(expected_type)}"]
+
+    if _schema_includes_type(expected_type, "object") and isinstance(value, dict):
+        properties = schema.get("properties") if isinstance(schema.get("properties"), dict) else {}
+        required = schema.get("required") if isinstance(schema.get("required"), list) else []
+        for key in required:
+            if key not in value:
+                errors.append(f"{path}.{key} is required")
+        if schema.get("additionalProperties") is False:
+            extra = sorted(str(key) for key in set(value) - set(properties))
+            for key in extra:
+                errors.append(f"{path}.{key} is not allowed")
+        for key, item in value.items():
+            if key in properties and isinstance(properties[key], dict):
+                errors.extend(validate_json_value(properties[key], item, path=f"{path}.{key}"))
+
+    elif _schema_includes_type(expected_type, "array") and isinstance(value, list):
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, item in enumerate(value):
+                errors.extend(validate_json_value(item_schema, item, path=f"{path}[{index}]"))
+
+    elif _schema_includes_type(expected_type, "string") and isinstance(value, str):
+        min_length = schema.get("minLength")
+        if isinstance(min_length, int) and len(value) < min_length:
+            errors.append(f"{path} must have at least {min_length} characters")
+        max_length = schema.get("maxLength")
+        if isinstance(max_length, int) and len(value) > max_length:
+            errors.append(f"{path} must have at most {max_length} characters")
+
+    elif (
+        (_schema_includes_type(expected_type, "integer") or _schema_includes_type(expected_type, "number"))
+        and isinstance(value, (int, float))
+        and not isinstance(value, bool)
+    ):
+        minimum = schema.get("minimum")
+        maximum = schema.get("maximum")
+        if isinstance(minimum, (int, float)) and value < minimum:
+            errors.append(f"{path} must be >= {minimum}")
+        if isinstance(maximum, (int, float)) and value > maximum:
+            errors.append(f"{path} must be <= {maximum}")
+
+    allowed = schema.get("enum")
+    if isinstance(allowed, list) and value not in allowed:
+        errors.append(f"{path} must be one of {', '.join(str(item) for item in allowed)}")
+
+    return errors
+
+
+def _schema_includes_type(expected_type: Any, item: str) -> bool:
+    if isinstance(expected_type, list):
+        return item in expected_type
+    return expected_type == item
+
+
+def _matches_json_type(value: Any, expected_type: Any) -> bool:
+    if isinstance(expected_type, list):
+        return any(_matches_json_type(value, item) for item in expected_type)
+    if expected_type == "object":
+        return isinstance(value, dict)
+    if expected_type == "array":
+        return isinstance(value, list)
+    if expected_type == "string":
+        return isinstance(value, str)
+    if expected_type == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected_type == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if expected_type == "boolean":
+        return isinstance(value, bool)
+    if expected_type == "null":
+        return value is None
+    return True
+
+
+def _type_label(expected_type: Any) -> str:
+    if isinstance(expected_type, list):
+        return " or ".join(str(item) for item in expected_type)
+    return str(expected_type)

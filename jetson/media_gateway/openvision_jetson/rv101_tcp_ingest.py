@@ -6,6 +6,7 @@ import asyncio
 from dataclasses import dataclass
 import json
 import os
+import socket
 import struct
 from typing import Any, Awaitable, Callable
 
@@ -26,6 +27,7 @@ MAX_VIDEO_PAYLOAD_BYTES = 8 * 1024 * 1024
 MAX_AUDIO_PAYLOAD_BYTES = 512 * 1024
 
 AudioPcmHandler = Callable[[str, bytes], Awaitable[None] | None]
+AudioCloseHandler = Callable[[str], None]
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,11 +47,13 @@ class Rv101TcpIngestService:
         events: InMemoryEventStore,
         settings_provider: Callable[[], Rv101TcpIngestSettings] = None,
         audio_pcm_handler: AudioPcmHandler | None = None,
+        audio_close_handler: AudioCloseHandler | None = None,
     ) -> None:
         self._media = media
         self._events = events
         self._settings_provider = settings_provider or load_rv101_tcp_ingest_settings
         self._audio_pcm_handler = audio_pcm_handler
+        self._audio_close_handler = audio_close_handler
         self._video_server: asyncio.AbstractServer | None = None
         self._audio_server: asyncio.AbstractServer | None = None
         self._settings = self._settings_provider()
@@ -131,6 +135,7 @@ class Rv101TcpIngestService:
         writer: asyncio.StreamWriter,
     ) -> None:
         peer = writer.get_extra_info("peername")
+        seen_audio_sessions: set[str] = set()
         self._events.add("rv101_ingest", "client_connected", {"kind": kind, "peer": str(peer)})
         try:
             while True:
@@ -141,6 +146,7 @@ class Rv101TcpIngestService:
                 if kind == "video":
                     self._handle_video_frame(frame.header, frame.payload, frame.message_type)
                 else:
+                    seen_audio_sessions.add(_session_id(frame.header))
                     await self._handle_audio_frame(frame.header, frame.payload, frame.message_type)
         except (asyncio.IncompleteReadError, ConnectionError):
             pass
@@ -154,6 +160,9 @@ class Rv101TcpIngestService:
         finally:
             writer.close()
             await writer.wait_closed()
+            if kind == "audio" and self._audio_close_handler:
+                for session_id in sorted(seen_audio_sessions):
+                    self._audio_close_handler(session_id)
             self._events.add("rv101_ingest", "client_disconnected", {"kind": kind, "peer": str(peer)})
 
     def _handle_video_frame(self, header: dict[str, Any], payload: bytes, message_type: int) -> None:
@@ -206,7 +215,9 @@ class Rv101TcpIngestService:
             channels=channels,
             payload_bytes=len(payload),
             strong=strong,
-            rms=float(metrics.get("avg_abs") or 0.0),
+            avg_abs=float(metrics.get("avg_abs") or 0.0),
+            peak_abs=int(metrics.get("peak_abs") or 0),
+            non_silent_ratio=float(metrics.get("non_silent_ratio") or 0.0),
             source=str(header.get("audioSource") or "rv101"),
         )
         if self._audio_pcm_handler:
@@ -251,13 +262,38 @@ def build_rvs1_frame(message_type: int, header: dict[str, Any], payload: bytes =
 
 
 def load_rv101_tcp_ingest_settings() -> Rv101TcpIngestSettings:
+    bind_host = os.getenv("OPENVISION_RV101_BIND_HOST", "0.0.0.0")
     return Rv101TcpIngestSettings(
         enabled=_env_bool("OPENVISION_RV101_TCP_INGEST", default=False),
-        bind_host=os.getenv("OPENVISION_RV101_BIND_HOST", "0.0.0.0"),
-        advertised_host=os.getenv("OPENVISION_RV101_ADVERTISED_HOST", "127.0.0.1"),
+        bind_host=bind_host,
+        advertised_host=_advertised_host_for(bind_host),
         video_port=_env_int("OPENVISION_RV101_VIDEO_PORT", 8770),
         audio_port=_env_int("OPENVISION_RV101_AUDIO_PORT", 8771),
     )
+
+
+def _advertised_host_for(bind_host: str) -> str:
+    explicit = _clean_env("OPENVISION_RV101_ADVERTISED_HOST")
+    if explicit:
+        return explicit
+    shared = _clean_env("OPENVISION_JETSON_LAN_IP") or _clean_env("OPENVISION_ADVERTISED_HOST")
+    if shared:
+        return shared
+    if bind_host not in {"0.0.0.0", "::", ""}:
+        return bind_host
+    return _detect_lan_ip() or "0.0.0.0"
+
+
+def _detect_lan_ip() -> str | None:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("8.8.8.8", 80))
+            host = sock.getsockname()[0]
+    except OSError:
+        return None
+    if host.startswith("127."):
+        return None
+    return host
 
 
 def _server_port(server: asyncio.AbstractServer | None) -> int | None:
@@ -296,3 +332,11 @@ def _env_int(name: str, default: int) -> int:
         return int(os.getenv(name, str(default)))
     except ValueError:
         return default
+
+
+def _clean_env(name: str) -> str | None:
+    value = os.getenv(name)
+    if not value:
+        return None
+    cleaned = value.strip()
+    return cleaned or None

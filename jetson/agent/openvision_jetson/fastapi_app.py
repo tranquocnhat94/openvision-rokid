@@ -48,7 +48,8 @@ class SkillExecuteRequest(BaseModel):
 
 class RealtimeStartRequest(BaseModel):
     turn_policy: str = "manual"
-    output_modalities: list[str] = Field(default_factory=lambda: ["text"])
+    output_modalities: list[str] | None = None
+    voice_output: bool | None = None
 
 
 class RealtimeTextRequest(BaseModel):
@@ -82,6 +83,9 @@ class AudioMetricsRequest(BaseModel):
     chunk_count: int = Field(..., ge=0)
     strong_chunk_count: int = Field(..., ge=0)
     rms: float | None = Field(default=None, ge=0)
+    avg_abs: float | None = Field(default=None, ge=0)
+    peak_abs: int | None = Field(default=None, ge=0)
+    non_silent_ratio: float | None = Field(default=None, ge=0, le=1)
     source: str | None = None
 
 
@@ -94,7 +98,7 @@ class PerceptionSnapshotRequest(BaseModel):
 
 
 class Yolo26SnapshotRequest(BaseModel):
-    source: str = "external_runtime"
+    source: str = "rokid_yolo26_external"
     detections: list[dict[str, Any]] = Field(default_factory=list)
     frame_id: str | None = None
     width: int | None = Field(default=None, ge=1)
@@ -213,12 +217,16 @@ def create_app(control_plane: OpenVisionControlPlane | None = None) -> FastAPI:
             session_id=request.session_id,
         )
         if result["status"] == "error":
-            raise HTTPException(status_code=404, detail=result["error"])
+            raise HTTPException(status_code=_skill_error_status(result["error"]), detail=result["error"])
         return result
 
     @app.get("/api/hud/sample")
     async def sample_hud(session_id: str | None = None) -> dict[str, object]:
         return {"hud_scene": control.sample_hud(session_id)}
+
+    @app.post("/api/hud/{session_id}/test-scene")
+    async def test_hud_scene(session_id: str) -> dict[str, Any]:
+        return {"hud_scene": control.test_hud(session_id)}
 
     @app.get("/api/hud/latest")
     async def latest_hud_scenes() -> dict[str, list[dict[str, Any]]]:
@@ -235,13 +243,17 @@ def create_app(control_plane: OpenVisionControlPlane | None = None) -> FastAPI:
     async def realtime_statuses() -> dict[str, list[dict[str, Any]]]:
         return {"realtime": control.list_realtime()}
 
+    @app.get("/api/realtime/voice-output")
+    async def realtime_voice_output_statuses() -> dict[str, list[dict[str, Any]]]:
+        return {"voice_output": control.list_voice_output()}
+
     @app.get("/api/debug-stt")
     async def debug_stt(
         session_id: str | None = None,
         limit: int = Query(default=30, ge=1, le=120),
     ) -> dict[str, Any]:
         return {
-            "status": control.debug_stt_status(),
+            "status": await control.debug_stt_status(probe=True),
             "transcripts": control.list_debug_stt_transcripts(session_id=session_id, limit=limit),
         }
 
@@ -258,6 +270,7 @@ def create_app(control_plane: OpenVisionControlPlane | None = None) -> FastAPI:
             session_id=session_id,
             turn_policy=request.turn_policy,
             output_modalities=request.output_modalities,
+            voice_output=request.voice_output,
         )
 
     @app.post("/api/realtime/{session_id}/stop")
@@ -407,12 +420,22 @@ def create_app(control_plane: OpenVisionControlPlane | None = None) -> FastAPI:
             chunk_count=request.chunk_count,
             strong_chunk_count=request.strong_chunk_count,
             rms=request.rms,
+            avg_abs=request.avg_abs,
+            peak_abs=request.peak_abs,
+            non_silent_ratio=request.non_silent_ratio,
             source=request.source,
         )
 
     @app.get("/api/perception")
     async def perception_statuses() -> dict[str, list[dict[str, Any]]]:
         return {"perception": control.list_perception()}
+
+    @app.get("/api/perception/{session_id}/history")
+    async def perception_history(
+        session_id: str,
+        limit: int = Query(default=10, ge=1, le=100),
+    ) -> dict[str, list[dict[str, Any]]]:
+        return {"perception": control.perception_history(session_id=session_id, limit=limit)}
 
     @app.post("/api/perception/{session_id}/detections")
     async def perception_detections(session_id: str, request: PerceptionSnapshotRequest) -> dict[str, Any]:
@@ -453,6 +476,27 @@ def create_app(control_plane: OpenVisionControlPlane | None = None) -> FastAPI:
         except WebSocketDisconnect:
             return
 
+    @app.websocket("/ws/realtime/{session_id}/audio")
+    async def realtime_audio_output_stream(websocket: WebSocket, session_id: str) -> None:
+        await websocket.accept()
+        queue = control.voice_output.subscribe(session_id)
+        try:
+            await websocket.send_json(
+                {
+                    "type": "voice_config",
+                    "format": "pcm_s16le",
+                    "sample_rate": 24000,
+                    "channels": 1,
+                }
+            )
+            while True:
+                message = await queue.get()
+                await websocket.send_json(message)
+        except WebSocketDisconnect:
+            return
+        finally:
+            control.voice_output.unsubscribe(session_id, queue)
+
     @app.websocket("/ws")
     async def rv101_control(websocket: WebSocket) -> None:
         await websocket.accept()
@@ -491,6 +535,16 @@ def create_app(control_plane: OpenVisionControlPlane | None = None) -> FastAPI:
     static_dir = default_static_dir()
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="ops_console")
     return app
+
+
+def _skill_error_status(error: dict[str, Any] | None) -> int:
+    if not isinstance(error, dict):
+        return 500
+    if error.get("code") == "unknown_skill":
+        return 404
+    if error.get("code") in {"invalid_skill_args", "missing_target_id"}:
+        return 400
+    return 409
 
 
 app = create_app()

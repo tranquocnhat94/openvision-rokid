@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .audio_signal import AudioForwardGate, is_voice_like, pcm16_metrics
+from .cloud_gateway import CloudGateway
 from .debug_stt import DebugSttRuntime
 from .event_store import InMemoryEventStore
 from .hud_authority import HudAuthority
@@ -20,6 +21,7 @@ from .settings import load_settings
 from .simulator_bridge import SimulatorBridge
 from .skill_executor import SkillExecutor
 from .skill_registry import SkillRegistry
+from .voice_output import VoiceOutputBus
 from .yolo26_rokid_adapter import Yolo26RokidAdapter
 
 
@@ -30,11 +32,18 @@ class OpenVisionControlPlane:
         self.hud = HudAuthority(events=self.events)
         self.media = MediaGateway(events=self.events)
         self.preview = PreviewStore(events=self.events)
+        self.voice_output = VoiceOutputBus()
         self.perception = PerceptionGraph(events=self.events)
         self.yolo26 = Yolo26RokidAdapter(events=self.events)
+        self.cloud_gateway = CloudGateway(events=self.events)
         self.debug_stt = DebugSttRuntime(events=self.events)
         self.skills = SkillRegistry()
-        self.skill_executor = SkillExecutor(perception=self.perception, events=self.events)
+        self.skill_executor = SkillExecutor(
+            perception=self.perception,
+            events=self.events,
+            registry=self.skills,
+            cloud_gateway=self.cloud_gateway,
+        )
         self._rv101_audio_gates: dict[str, AudioForwardGate] = {}
         self._simulator_audio_gates: dict[str, AudioForwardGate] = {}
         self.realtime = RealtimeSessionManager(
@@ -42,11 +51,14 @@ class OpenVisionControlPlane:
             skills=self.skills,
             skill_handler=self._execute_skill_for_realtime,
             response_text_handler=self._update_hud_from_realtime_text,
+            response_audio_handler=self._publish_realtime_voice_output,
+            response_audio_done_handler=self._publish_realtime_voice_done,
         )
         self.rv101_ingest = Rv101TcpIngestService(
             media=self.media,
             events=self.events,
             audio_pcm_handler=self._forward_rv101_audio_to_realtime,
+            audio_close_handler=self._close_rv101_audio,
         )
         self.simulator = SimulatorBridge(
             events=self.events,
@@ -79,6 +91,7 @@ class OpenVisionControlPlane:
             "sessions": len(self.sessions.list()),
             "skills": len(self.skills.list_definitions()),
             "realtime_sessions": len(self.realtime.statuses()),
+            "voice_output": settings["realtime_voice_output_enabled"],
             "yolo26_adapter_status": yolo26["status"],
             "rv101_tcp_ingest": self.rv101_ingest.status()["status"],
         }
@@ -186,6 +199,9 @@ class OpenVisionControlPlane:
     def sample_hud(self, session_id: str | None = None) -> dict[str, object]:
         return sample_hud_scene(session_id)
 
+    def test_hud(self, session_id: str) -> dict[str, Any]:
+        return self.hud.update_test_scene(session_id=session_id)
+
     def latest_hud(self, session_id: str) -> dict[str, Any] | None:
         return self.hud.latest(session_id)
 
@@ -195,7 +211,12 @@ class OpenVisionControlPlane:
     def list_realtime(self) -> list[dict[str, Any]]:
         return self.realtime.statuses()
 
-    def debug_stt_status(self) -> dict[str, Any]:
+    def list_voice_output(self) -> list[dict[str, Any]]:
+        return self.voice_output.statuses()
+
+    async def debug_stt_status(self, *, probe: bool = False) -> dict[str, Any]:
+        if probe:
+            return await self.debug_stt.check_health()
         return self.debug_stt.status()
 
     def list_debug_stt_transcripts(self, *, session_id: str | None = None, limit: int = 30) -> list[dict[str, Any]]:
@@ -350,6 +371,9 @@ class OpenVisionControlPlane:
     def list_perception(self) -> list[dict[str, Any]]:
         return self.perception.list_latest()
 
+    def perception_history(self, session_id: str, *, limit: int = 10) -> list[dict[str, Any]]:
+        return self.perception.recent_snapshots(session_id=session_id, limit=limit)
+
     def yolo26_status(self) -> dict[str, Any]:
         return self.yolo26.status()
 
@@ -366,9 +390,13 @@ class OpenVisionControlPlane:
         accepted = self.yolo26.validate_external_snapshot(source=source)
         if accepted["status"] != "accepted":
             return accepted
+        filtered_detections = self.yolo26.filter_detections(
+            detections,
+            min_confidence=float(accepted["min_confidence"]),
+        )
         snapshot = self.perception.update_snapshot(
             session_id=session_id,
-            detections=detections,
+            detections=filtered_detections,
             source=str(accepted["source"]),
             frame_id=frame_id,
             width=width,
@@ -377,12 +405,22 @@ class OpenVisionControlPlane:
         self.events.add(
             "adapter.yolo26",
             "snapshot_accepted",
-            {"objects": len(detections), "frame_id": frame_id, "source": source},
+            {
+                "objects": len(filtered_detections),
+                "rejected_low_confidence": len(detections) - len(filtered_detections),
+                "frame_id": frame_id,
+                "source": source,
+                "min_confidence": accepted["min_confidence"],
+            },
             session_id=session_id,
         )
         return {
             "status": "accepted",
             "adapter": accepted["adapter"],
+            "source": accepted["source"],
+            "min_confidence": accepted["min_confidence"],
+            "accepted_detection_count": len(filtered_detections),
+            "rejected_detection_count": len(detections) - len(filtered_detections),
             "perception": snapshot,
         }
 
@@ -415,6 +453,9 @@ class OpenVisionControlPlane:
         chunk_count: int,
         strong_chunk_count: int,
         rms: float | None = None,
+        avg_abs: float | None = None,
+        peak_abs: int | None = None,
+        non_silent_ratio: float | None = None,
         source: str | None = None,
     ) -> dict[str, Any]:
         return self.media.record_audio_metrics(
@@ -425,6 +466,9 @@ class OpenVisionControlPlane:
             chunk_count=chunk_count,
             strong_chunk_count=strong_chunk_count,
             rms=rms,
+            avg_abs=avg_abs,
+            peak_abs=peak_abs,
+            non_silent_ratio=non_silent_ratio,
             source=source,
         )
 
@@ -453,9 +497,14 @@ class OpenVisionControlPlane:
         )
 
     def _close_simulator_media(self, session_id: str) -> None:
+        self.debug_stt.flush_session(session_id, reason="simulator_stream_closed")
         self.media.close_session(session_id)
         self.preview.remove_session(session_id)
         self._simulator_audio_gates.pop(session_id, None)
+
+    def _close_rv101_audio(self, session_id: str) -> None:
+        self.debug_stt.flush_session(session_id, reason="rv101_audio_stream_closed")
+        self._rv101_audio_gates.pop(session_id, None)
 
     def _execute_skill_for_realtime(
         self,
@@ -466,12 +515,22 @@ class OpenVisionControlPlane:
         return self.execute_skill(name, args, session_id=session_id)
 
     def _update_hud_from_realtime_text(self, session_id: str, text: str) -> None:
-        self.hud.update_answer(
+        self.hud.update_realtime_text(
             session_id=session_id,
-            answer_strip=text,
+            text=text,
             edge_chips=["realtime"],
             ttl_ms=5000,
         )
+
+    def _publish_realtime_voice_output(self, session_id: str, audio_base64: str, byte_count: int) -> None:
+        self.voice_output.publish_delta(
+            session_id=session_id,
+            audio_base64=audio_base64,
+            byte_count=byte_count,
+        )
+
+    def _publish_realtime_voice_done(self, session_id: str) -> None:
+        self.voice_output.publish_done(session_id=session_id)
 
     async def _forward_rv101_audio_to_realtime(self, session_id: str, pcm_bytes: bytes) -> None:
         metrics = pcm16_metrics(pcm_bytes)
@@ -495,9 +554,10 @@ class OpenVisionControlPlane:
             sample_rate=24000,
             channels=1,
             payload_bytes=len(pcm_bytes),
-            strong=float(metrics.get("avg_abs") or 0.0) >= 120.0
-            and float(metrics.get("non_silent_ratio") or 0.0) >= 0.02,
-            rms=float(metrics.get("avg_abs") or 0.0),
+            strong=is_voice_like(metrics),
+            avg_abs=float(metrics.get("avg_abs") or 0.0),
+            peak_abs=int(metrics.get("peak_abs") or 0),
+            non_silent_ratio=float(metrics.get("non_silent_ratio") or 0.0),
             source="iphone_webrtc",
         )
         await self._forward_gated_audio(
@@ -519,6 +579,18 @@ class OpenVisionControlPlane:
     ) -> None:
         gate = gates.setdefault(session_id, AudioForwardGate())
         decision = gate.accept(pcm_bytes, metrics)
+        self.media.record_audio_gate_decision(
+            session_id=session_id,
+            source=source,
+            state=decision.state,
+            transition=decision.transition,
+            strong=decision.strong,
+            forwarded_chunks=len(decision.chunks),
+            buffered_chunks=decision.buffered_chunks,
+            avg_abs=float(metrics.get("avg_abs") or 0.0),
+            peak_abs=int(metrics.get("peak_abs") or 0),
+            non_silent_ratio=float(metrics.get("non_silent_ratio") or 0.0),
+        )
         if decision.transition:
             self.events.add(
                 "audio_gate",

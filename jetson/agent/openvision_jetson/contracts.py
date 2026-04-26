@@ -109,9 +109,13 @@ class SettingsSnapshot:
     realtime_model: str
     realtime_voice: str
     realtime_url: str
+    realtime_max_output_tokens: int = 96
+    realtime_voice_output_enabled: bool = False
     debug_stt_enabled: bool = False
     debug_stt_transcribe_url: str | None = None
     debug_stt_health_url: str | None = None
+    debug_stt_min_audio_ms: int = 800
+    debug_stt_max_audio_ms: int = 12_000
     openai_key_source: str = "missing"
     secrets_redacted: bool = True
     secret_load_error: str | None = None

@@ -4,6 +4,7 @@ const state = {
   skills: [],
   events: [],
   realtime: [],
+  voiceOutput: [],
   media: [],
   preview: [],
   rv101Ingest: null,
@@ -44,7 +45,7 @@ function renderHealth() {
   chip.textContent = "Online";
   chip.className = "chip";
   facts.innerHTML = "";
-  for (const key of ["service", "version", "environment", "realtime_model", "openai_key_present", "openai_key_source", "debug_stt_enabled", "debug_stt_status", "rv101_tcp_ingest", "yolo26_adapter_status", "sessions", "skills"]) {
+  for (const key of ["service", "version", "environment", "realtime_model", "voice_output", "openai_key_present", "openai_key_source", "debug_stt_enabled", "debug_stt_status", "rv101_tcp_ingest", "yolo26_adapter_status", "sessions", "skills"]) {
     const dt = document.createElement("dt");
     const dd = document.createElement("dd");
     dt.textContent = key;
@@ -87,10 +88,13 @@ function renderRealtime() {
     const row = document.createElement("article");
     row.className = "item";
     const statusClass = item.status === "connected" ? "chip" : item.status === "blocked" ? "chip warn" : item.status === "error" ? "chip error" : "chip muted";
+    const voice = state.voiceOutput.find((output) => output.session_id === item.session_id);
     row.innerHTML = `
       <div class="item-title">${item.session_id}</div>
       <div class="item-meta"><span class="${statusClass}">${item.status}</span> <span class="chip muted">${item.turn_policy}</span></div>
       <div class="item-meta">model: ${item.model}</div>
+      <div class="item-meta">output: ${(item.output_modalities || ["text"]).join(" + ")}</div>
+      <div class="item-meta">voice: ${voice ? `${voice.delta_count} chunks · ${voice.subscribers} listeners` : "idle"}</div>
       <div class="item-meta">last: ${item.last_event_type || "none"} · events: ${item.event_count}</div>
       ${item.error ? `<div class="item-meta">${item.error.code}: ${item.error.message}</div>` : ""}
     `;
@@ -110,7 +114,7 @@ function renderDebugStt() {
   header.innerHTML = `
     <div class="item-title">Mini PC PhoWhisper</div>
     <div class="item-meta"><span class="${statusClass}">${status?.status || "unknown"}</span> ${status?.transcribe_url || "disabled"}</div>
-    <div class="item-meta">turns: ${status?.transcript_count ?? 0} · buffers: ${status?.turn_buffers ?? 0}</div>
+    <div class="item-meta">turns: ${status?.transcript_count ?? 0} · buffers: ${status?.turn_buffers ?? 0} · window: ${status?.min_audio_ms ?? "?"}-${status?.max_audio_ms ?? "?"}ms</div>
     ${status?.last_error ? `<div class="item-meta">last error: ${status.last_error}</div>` : ""}
   `;
   root.append(header);
@@ -304,10 +308,16 @@ function renderMedia() {
   for (const item of state.media) {
     const row = document.createElement("article");
     row.className = "item";
+    const videoFps = item.video.estimated_fps ?? item.video.fps ?? 0;
+    const frameAge = item.video.last_frame_age_ms ?? null;
+    const frameAgeText = frameAge === null ? "no frame" : `${frameAge}ms`;
+    const resolution = item.video.width && item.video.height ? `${item.video.width}x${item.video.height}` : "unknown";
     row.innerHTML = `
       <div class="item-title">${item.session_id}</div>
       <div class="item-meta">video: ${item.video.state} · ${item.video.transport || "none"} · ${item.video.codec || "track"}</div>
+      <div class="item-meta">stream: ${videoFps ? videoFps.toFixed(1) : "?"} fps · age ${frameAgeText} · ${resolution} · frames ${item.video.frame_count || 0}</div>
       <div class="item-meta">audio: ${item.audio.state} · ${item.audio.transport || "none"} · strong ${(item.audio.strong_chunk_ratio * 100).toFixed(1)}%</div>
+      <div class="item-meta">signal: avg ${Math.round(item.audio.avg_abs || 0)} · peak ${item.audio.peak_abs || 0} · non-silent ${((item.audio.non_silent_ratio || 0) * 100).toFixed(1)}% · gate ${item.audio.gate_state || "idle"} ${item.audio.gate_open_count || 0}/${item.audio.gate_close_count || 0}</div>
       <div class="item-meta">source: ${item.audio.source || "unknown"}</div>
     `;
     root.append(row);
@@ -459,6 +469,7 @@ async function refresh() {
   state.sessions = (await api("/api/sessions")).sessions;
   state.skills = (await api("/api/skills")).skills;
   state.realtime = (await api("/api/realtime")).realtime;
+  state.voiceOutput = (await api("/api/realtime/voice-output")).voice_output;
   state.media = (await api("/api/media")).media;
   state.preview = (await api("/api/preview")).preview;
   state.rv101Ingest = (await api("/api/rv101/ingest")).ingest;
@@ -553,7 +564,10 @@ async function startRealtime() {
   }
   await api(`/api/realtime/${sessionId}/start`, {
     method: "POST",
-    body: JSON.stringify({ turn_policy: "manual", output_modalities: ["text"] }),
+    body: JSON.stringify({
+      turn_policy: "manual",
+      voice_output: Boolean(document.querySelector("#voiceOutputToggle")?.checked),
+    }),
   });
   await refresh();
 }
@@ -585,8 +599,12 @@ async function warmDebugStt() {
 }
 
 async function loadSampleHud() {
-  const result = await api("/api/hud/sample");
+  const sessionId = firstSessionId();
+  const result = sessionId
+    ? await api(`/api/hud/${sessionId}/test-scene`, { method: "POST" })
+    : await api("/api/hud/sample");
   renderHud(result.hud_scene);
+  await refresh();
 }
 
 document.querySelector("#refreshButton").addEventListener("click", refresh);
