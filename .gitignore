@@ -2,29 +2,62 @@
 *.swp
 *.swo
 
-# Python
+# Local development sandboxes and generated artifacts.
+.gradle-user/
+_apk/
+_tmp/
+artifacts/
+runtime/
+device_research/
+device_research/*.zip
+service-wifi.out/
+AirMouseS3/
+RokidHandTrackingDemo/
+Rokid Lyrics Player/
+einkbro/
+
+# Android build/local machine state.
+RokidVideoStream/.gradle/
+RokidVideoStream/.kotlin/
+RokidVideoStream/local.properties
+RokidVideoStream/app/build/
+OpenVision rokid/glasses/android_client/.gradle/
+OpenVision rokid/glasses/android_client/.kotlin/
+OpenVision rokid/glasses/android_client/local.properties
+OpenVision rokid/glasses/android_client/app/build/
+OpenVision rokid/glasses/android_client/signoff_*.json
+
+# Backend runtime state and private config.
+rokidjetson/backend_mvp/app/__pycache__/
+rokidjetson/backend_mvp/tests/__pycache__/
+rokidjetson/backend_mvp/runtime/
+rokidjetson/backend_mvp/.venv/
+rokidjetson/backend_mvp/config/
+rokidjetson/backend_mvp/scripts/__pycache__/
+OpenVision rokid/.venv/
+OpenVision rokid/runtime/
+OpenVision rokid/ops/secrets/
+OpenVision rokid/ops/openvision.env
 __pycache__/
 *.pyc
-.venv/
 
-# Secrets and local runtime state
+# Secrets and local credentials.
 .env
 .env.*
-secrets/
-**/secrets/
 *.key
 *.pem
 *.p12
 *.jks
 *.keystore
+secrets/
+**/secrets/
 *.secret
 *.secret.*
 *secret.env
 *secrets.env
 
-# Logs and generated artifacts
 *.log
-runtime/
-artifacts/
-dist/
-build/
+
+# User-supplied guidance source archive; canonical docs are copied into docs/openvision.
+OpenVision rokid/openvision_rokid_codex_guidance_pack/
+OpenVision rokid/openvision_rokid_codex_guidance_pack.zip

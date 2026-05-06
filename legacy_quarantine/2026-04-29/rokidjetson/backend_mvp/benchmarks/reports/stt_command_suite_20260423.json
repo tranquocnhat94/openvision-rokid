@@ -1,0 +1,339 @@
+{
+  "summary": {
+    "suiteName": "rokid_vi_command_suite_v1",
+    "strictCaseCount": 4,
+    "strictTranscriptExactRate": 1.0,
+    "strictRequiredTokenRate": 1.0,
+    "strictCommandPassRate": 1.0,
+    "strictOverallPassRate": 1.0,
+    "config": {
+      "asrBackend": "local_http",
+      "localRequestFormat": "binary_wav",
+      "localHotwords": "áo vàng, người áo vàng, tìm người áo vàng, nghe được không, bật chế độ đếm xe, bật chế độ đếm phương tiện",
+      "localPartialEnabled": false
+    }
+  },
+  "results": [
+    {
+      "id": "target_search_phrase_4s",
+      "strict": true,
+      "notes": "Short isolated target-search command.",
+      "wavPath": "artifacts/audio/sess_34db8868_phrase_4s.wav",
+      "expectedTranscript": "tìm người áo vàng",
+      "actualTranscript": "tìm người áo vàng",
+      "transcriptExact": true,
+      "requiredTokens": [
+        "tìm",
+        "người",
+        "áo",
+        "vàng"
+      ],
+      "requiredTokenPass": true,
+      "expectedIntent": "target_search",
+      "actualIntent": "target_search",
+      "expectedMode": "visual_assistant",
+      "actualMode": "visual_assistant",
+      "expectedTargetQuery": "nguoi ao vang",
+      "actualTargetQuery": "nguoi ao vang",
+      "commandPass": true,
+      "overallPass": true,
+      "metrics": {
+        "expectedTokens": [
+          "tim",
+          "nguoi",
+          "ao",
+          "vang"
+        ],
+        "actualTokens": [
+          "tim",
+          "nguoi",
+          "ao",
+          "vang"
+        ],
+        "tokenPrecision": 1.0,
+        "tokenRecall": 1.0,
+        "tokenF1": 1.0,
+        "wer": 0.0,
+        "cer": 0.0
+      },
+      "action": {
+        "intent": "target_search",
+        "mode": "visual_assistant",
+        "targetQuery": "nguoi ao vang",
+        "confidence": 0.94,
+        "statusText": "Đang tìm nguoi ao vang."
+      }
+    },
+    {
+      "id": "target_search_good_window",
+      "strict": true,
+      "notes": "Longer window around the same target-search command.",
+      "wavPath": "artifacts/audio/sess_34db8868_good_window.wav",
+      "expectedTranscript": "tìm người áo vàng",
+      "actualTranscript": "tìm người áo vàng",
+      "transcriptExact": true,
+      "requiredTokens": [
+        "tìm",
+        "người",
+        "áo",
+        "vàng"
+      ],
+      "requiredTokenPass": true,
+      "expectedIntent": "target_search",
+      "actualIntent": "target_search",
+      "expectedMode": "visual_assistant",
+      "actualMode": "visual_assistant",
+      "expectedTargetQuery": "nguoi ao vang",
+      "actualTargetQuery": "nguoi ao vang",
+      "commandPass": true,
+      "overallPass": true,
+      "metrics": {
+        "expectedTokens": [
+          "tim",
+          "nguoi",
+          "ao",
+          "vang"
+        ],
+        "actualTokens": [
+          "tim",
+          "nguoi",
+          "ao",
+          "vang"
+        ],
+        "tokenPrecision": 1.0,
+        "tokenRecall": 1.0,
+        "tokenF1": 1.0,
+        "wer": 0.0,
+        "cer": 0.0
+      },
+      "action": {
+        "intent": "target_search",
+        "mode": "visual_assistant",
+        "targetQuery": "nguoi ao vang",
+        "confidence": 0.94,
+        "statusText": "Đang tìm nguoi ao vang."
+      }
+    },
+    {
+      "id": "traffic_count_transport",
+      "strict": true,
+      "notes": "Traffic counting command with the transport phrase.",
+      "wavPath": "artifacts/audio/sess_34db8868_count_transport.wav",
+      "expectedTranscript": "bật chế độ đếm phương tiện",
+      "actualTranscript": "bật chế độ đếm phương tiện",
+      "transcriptExact": true,
+      "requiredTokens": [
+        "bật",
+        "chế",
+        "độ",
+        "đếm",
+        "phương",
+        "tiện"
+      ],
+      "requiredTokenPass": true,
+      "expectedIntent": "mode_change",
+      "actualIntent": "mode_change",
+      "expectedMode": "traffic_count",
+      "actualMode": "traffic_count",
+      "expectedTargetQuery": "",
+      "actualTargetQuery": "",
+      "commandPass": true,
+      "overallPass": true,
+      "metrics": {
+        "expectedTokens": [
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "phuong",
+          "tien"
+        ],
+        "actualTokens": [
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "phuong",
+          "tien"
+        ],
+        "tokenPrecision": 1.0,
+        "tokenRecall": 1.0,
+        "tokenF1": 1.0,
+        "wer": 0.0,
+        "cer": 0.0
+      },
+      "action": {
+        "intent": "mode_change",
+        "mode": "traffic_count",
+        "targetQuery": null,
+        "confidence": 0.98,
+        "statusText": "Đã bật đếm phương tiện."
+      }
+    },
+    {
+      "id": "incomplete_count_prefix_safe",
+      "strict": true,
+      "notes": "Ambiguous prefix should not escalate into a mode change.",
+      "wavPath": "artifacts/audio/sess_34db8868_count_vehicle_tight.wav",
+      "expectedTranscript": "bật chế độ đếm",
+      "actualTranscript": "bật chế độ đếm",
+      "transcriptExact": true,
+      "requiredTokens": [
+        "bật",
+        "chế",
+        "độ",
+        "đếm"
+      ],
+      "requiredTokenPass": true,
+      "expectedIntent": "transcript_only",
+      "actualIntent": "transcript_only",
+      "expectedMode": "",
+      "actualMode": "",
+      "expectedTargetQuery": "",
+      "actualTargetQuery": "",
+      "commandPass": true,
+      "overallPass": true,
+      "metrics": {
+        "expectedTokens": [
+          "bat",
+          "che",
+          "do",
+          "dem"
+        ],
+        "actualTokens": [
+          "bat",
+          "che",
+          "do",
+          "dem"
+        ],
+        "tokenPrecision": 1.0,
+        "tokenRecall": 1.0,
+        "tokenF1": 1.0,
+        "wer": 0.0,
+        "cer": 0.0
+      },
+      "action": {
+        "intent": "transcript_only",
+        "mode": null,
+        "targetQuery": null,
+        "confidence": 0.45,
+        "statusText": ""
+      }
+    },
+    {
+      "id": "full_session_reference",
+      "strict": false,
+      "notes": "Diagnostic long-form session reference; not counted in strict pass rate.",
+      "wavPath": "artifacts/audio/sess_34db8868.wav",
+      "expectedTranscript": "",
+      "actualTranscript": "a lô xin chào a lô a lô a lô xin chào nghe đã không tìm người áo màu vàng bật chế độ đếm xe bật chế độ đếm xe bật chế độ đếm xe a lô một hai ba a lô bật chế độ đếm xe đếm xe xe xe xe cổ bật chế độ đếm phương tiện. bật chế độ đếm phương tiện bật chế độ đếm phương tiện",
+      "transcriptExact": false,
+      "requiredTokens": [
+        "xin",
+        "chào",
+        "áo",
+        "vàng",
+        "đếm",
+        "phương",
+        "tiện"
+      ],
+      "requiredTokenPass": true,
+      "expectedIntent": "",
+      "actualIntent": "mode_change",
+      "expectedMode": "",
+      "actualMode": "traffic_count",
+      "expectedTargetQuery": "",
+      "actualTargetQuery": "",
+      "commandPass": false,
+      "overallPass": false,
+      "metrics": {
+        "expectedTokens": [],
+        "actualTokens": [
+          "a",
+          "lo",
+          "xin",
+          "chao",
+          "a",
+          "lo",
+          "a",
+          "lo",
+          "a",
+          "lo",
+          "xin",
+          "chao",
+          "nghe",
+          "da",
+          "khong",
+          "tim",
+          "nguoi",
+          "ao",
+          "mau",
+          "vang",
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "xe",
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "xe",
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "xe",
+          "a",
+          "lo",
+          "mot",
+          "hai",
+          "ba",
+          "a",
+          "lo",
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "xe",
+          "dem",
+          "xe",
+          "xe",
+          "xe",
+          "xe",
+          "co",
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "phuong",
+          "tien.",
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "phuong",
+          "tien",
+          "bat",
+          "che",
+          "do",
+          "dem",
+          "phuong",
+          "tien"
+        ],
+        "tokenPrecision": 0.0,
+        "tokenRecall": 0.0,
+        "tokenF1": 0.0,
+        "wer": null,
+        "cer": null
+      },
+      "action": {
+        "intent": "mode_change",
+        "mode": "traffic_count",
+        "targetQuery": null,
+        "confidence": 0.98,
+        "statusText": "Đã bật đếm phương tiện."
+      }
+    }
+  ]
+}

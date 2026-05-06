@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/media_event.schema.json",
+  "title": "MediaEvent",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "command_id",
+    "mode",
+    "session_id",
+    "status",
+    "payload",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "openvision.media_event.v1"},
+    "event_id": {"type": "string"},
+    "command_id": {"type": "string"},
+    "mode": {"type": "string", "enum": ["none", "snapshot", "burst_clip", "live_video"]},
+    "session_id": {"type": "string"},
+    "status": {"type": "string", "enum": ["queued", "running", "ok", "timeout", "cancelled", "error"]},
+    "payload": {"type": "object"},
+    "created_at": {"type": "string"}
+  }
+}

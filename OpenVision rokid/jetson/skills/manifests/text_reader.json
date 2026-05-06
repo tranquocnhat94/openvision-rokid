@@ -1,0 +1,69 @@
+{
+  "id": "openvision.skill.text_reader",
+  "version": "0.1.0",
+  "name": "text_reader",
+  "description": "Read visible text from Jetson-owned frame evidence. Use for signs, labels, screens, documents, or OCR questions such as \"biển này ghi gì\", \"có chữ gì\", or \"đọc giúp tôi dòng này\".",
+  "tool_name": "text_reader",
+  "latency_class": "interactive",
+  "local_first": true,
+  "cloud_allowed": true,
+  "cloud_behavior": "gateway_optional",
+  "privacy_level": "medium",
+  "media_requirements": {
+    "default_mode": "snapshot",
+    "allowed_modes": ["snapshot", "burst_clip"],
+    "requires_camera": true,
+    "requires_mic": false,
+    "live_video_allowed": false
+  },
+  "display_capabilities": ["text_hud", "thumbnail_card"],
+  "memory_allowed": false,
+  "hud_policy": "answer_strip",
+  "timeout_ms": 9000,
+  "local_resources": ["frame_bus", "perception_graph"],
+  "activation_phrases_vi": [
+    "biển này ghi gì",
+    "có chữ gì",
+    "đọc chữ",
+    "đọc giúp tôi dòng này",
+    "dòng này ghi gì",
+    "nhãn này ghi gì",
+    "màn hình ghi gì"
+  ],
+  "activation_phrases_en": ["read text", "what does this sign say", "ocr this"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "question": {"type": "string", "minLength": 1},
+      "target_region": {"type": "string"},
+      "language_hint": {"type": "string"},
+      "exact_text_required": {"type": "boolean"}
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "answer": {"type": "string"},
+      "text": {"type": ["string", "null"]},
+      "lines": {"type": "array", "items": {"type": "string"}},
+      "evidence": {"type": "array", "items": {"type": "string"}},
+      "preview": {"type": "object"}
+    },
+    "required": ["answer"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": [
+    "requests fresh snapshot before OCR when no current media exists",
+    "uses Jetson preview evidence through CloudGateway when local OCR is unavailable",
+    "returns concise HUD answer strip with exact visible text when possible",
+    "reports uncertainty when text is too small, blurred, cropped, or reflective"
+  ],
+  "failure_modes": [
+    "no frame evidence",
+    "text too small or blurred",
+    "image glare or screen refresh artifacts",
+    "cloud unavailable when local OCR is unavailable"
+  ]
+}

@@ -1,0 +1,20 @@
+[Unit]
+Description=OpenVision Glass Jetson Backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rokid
+WorkingDirectory=/opt/openvision-glass/rokidjetson/backend_mvp
+Environment=ROKID_BACKEND_HOST=0.0.0.0
+Environment=ROKID_BACKEND_PORT=9080
+Environment=ROKID_ROOT_DIR=/opt/openvision-glass
+Environment=ROKID_PUBLIC_HOST=127.0.0.1
+Environment=ROKID_DEFAULT_MODE=standby
+ExecStart=/opt/openvision-glass/runtime/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 9080
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

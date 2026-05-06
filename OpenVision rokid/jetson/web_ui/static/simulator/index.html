@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>OpenVision Simulator</title>
+    <link rel="stylesheet" href="/simulator/simulator.css?v=20260424-agent-trace1" />
+  </head>
+  <body>
+    <main class="sim">
+      <video id="preview" autoplay muted playsinline></video>
+      <div id="hudAim" class="hud-aim" hidden>
+        <div class="hud-reticle" aria-hidden="true"></div>
+        <div id="hudAimArrow" class="hud-aim-arrow"></div>
+        <div id="hudZoom" class="hud-zoom" hidden></div>
+      </div>
+      <div class="top">
+        <span id="stateChip">Idle</span>
+      </div>
+      <div id="hudChips" class="hud-chips"></div>
+      <div id="hudThumbs" class="hud-thumbs"></div>
+      <div id="hudAnswer" class="hud-answer">OpenVision</div>
+      <label class="voice-toggle">
+        <input id="voiceToggle" type="checkbox" checked />
+        <span>Voice</span>
+      </label>
+      <div id="voiceStatus" class="voice-status" aria-live="polite">Voice idle</div>
+      <button id="startButton" class="start" type="button">Start</button>
+    </main>
+    <script src="/simulator/simulator.js?v=20260501-voice-diagnostics1" defer></script>
+  </body>
+</html>

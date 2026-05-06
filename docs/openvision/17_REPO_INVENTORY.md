@@ -2,12 +2,12 @@
 
 Updated: 2026-04-25
 
-This inventory captures the current V2 repo shape so future contributors do not rediscover old paths or mistake legacy code for the product path.
+This inventory captures the current V2 repo shape so future Codex topics do not rediscover old paths or mistake legacy code for the product path.
 
 ## Active V2 Product Path
 
 ```text
-
+OpenVision rokid/
   glasses/                RV101 thin-client contract docs
   iphone_web_simulator/   browser/iPhone harness contract
   jetson/                 active Jetson runtime
@@ -20,6 +20,11 @@ Root canonical docs:
 
 ```text
 docs/openvision/
+.github/codex/prompts/
+AGENTS.md
+PROJECT_MEMORY.md
+ROKID_CURRENT_STATE.md
+ROKID_CODEX_EXECUTION_PACK.md
 ```
 
 ## Legacy Reference Paths
@@ -27,11 +32,11 @@ docs/openvision/
 These are reference only unless the user explicitly asks to edit them:
 
 ```text
-RokidVideoStream/          legacy buildable RV101 app
-rokidjetson/backend_mvp/   legacy backend MVP
+legacy_quarantine/2026-04-29/RokidVideoStream/          legacy buildable RV101 app
+legacy_quarantine/2026-04-29/rokidjetson/backend_mvp/   legacy backend MVP
 docs/reference/            supporting historical notes
 docs/archive/              archived product thinking
-rokidjetson/archive/       archived backend plans
+legacy_quarantine/2026-04-29/rokidjetson/archive/       archived backend plans
 ```
 
 Do not expand these paths as the active V2 product.
@@ -41,13 +46,13 @@ Do not expand these paths as the active V2 product.
 V2 has only the clean glasses contract in:
 
 ```text
-glasses/
+OpenVision rokid/glasses/
 ```
 
 The currently buildable Android app remains legacy:
 
 ```text
-RokidVideoStream/app/src/main/
+legacy_quarantine/2026-04-29/RokidVideoStream/app/src/main/
 ```
 
 Important legacy files:
@@ -68,21 +73,21 @@ Port only the thin-client pieces into V2 later: capture, encode, microphone, tra
 Active V2 backend:
 
 ```text
-jetson/agent/openvision_jetson/fastapi_app.py
-jetson/agent/openvision_jetson/control_plane.py
-jetson/media_gateway/openvision_jetson/
-jetson/perception/openvision_jetson/
-jetson/skills/openvision_jetson/
-jetson/hud_authority/openvision_jetson/
-jetson/realtime_agent/openvision_jetson/
-jetson/simulator_bridge/openvision_jetson/
-jetson/lab_fallbacks/openvision_jetson/
+OpenVision rokid/jetson/agent/openvision_jetson/fastapi_app.py
+OpenVision rokid/jetson/agent/openvision_jetson/control_plane.py
+OpenVision rokid/jetson/media_gateway/openvision_jetson/
+OpenVision rokid/jetson/perception/openvision_jetson/
+OpenVision rokid/jetson/skills/openvision_jetson/
+OpenVision rokid/jetson/hud_authority/openvision_jetson/
+OpenVision rokid/jetson/realtime_agent/openvision_jetson/
+OpenVision rokid/jetson/simulator_bridge/openvision_jetson/
+OpenVision rokid/jetson/lab_fallbacks/openvision_jetson/
 ```
 
 Legacy backend:
 
 ```text
-rokidjetson/backend_mvp/app/
+legacy_quarantine/2026-04-29/rokidjetson/backend_mvp/app/
 ```
 
 ## Current Runtime / Model Paths
@@ -99,17 +104,17 @@ skills/manifests/*.json
 V2 environment/runtime config:
 
 ```text
-ops/openvision.env.example
-ops/systemd/openvision-jetson.service
-scripts/prepare_jetson_secrets.sh
+OpenVision rokid/ops/openvision.env.example
+OpenVision rokid/ops/systemd/openvision-jetson.service
+OpenVision rokid/scripts/prepare_jetson_secrets.sh
 ```
 
 Legacy model/runtime scripts:
 
 ```text
-rokidjetson/backend_mvp/scripts/*phowhisper*
-rokidjetson/backend_mvp/scripts/*whisper*
-rokidjetson/backend_mvp/scripts/start_backend.sh
+legacy_quarantine/2026-04-29/rokidjetson/backend_mvp/scripts/*phowhisper*
+legacy_quarantine/2026-04-29/rokidjetson/backend_mvp/scripts/*whisper*
+legacy_quarantine/2026-04-29/rokidjetson/backend_mvp/scripts/start_backend.sh
 ```
 
 ## Current Cloud API Locations
@@ -117,22 +122,22 @@ rokidjetson/backend_mvp/scripts/start_backend.sh
 Active V2 cloud/live AI code:
 
 ```text
-jetson/realtime_agent/openvision_jetson/realtime_manager.py
+OpenVision rokid/jetson/realtime_agent/openvision_jetson/realtime_manager.py
 ```
 
 Secrets load through environment or key file:
 
 ```text
-jetson/agent/openvision_jetson/settings.py
-scripts/prepare_jetson_secrets.sh
+OpenVision rokid/jetson/agent/openvision_jetson/settings.py
+OpenVision rokid/scripts/prepare_jetson_secrets.sh
 ```
 
 Legacy direct cloud code still exists only as reference:
 
 ```text
-rokidjetson/backend_mvp/app/openai_realtime_skills.py
-rokidjetson/backend_mvp/app/voice_realtime_transcription_client.py
-rokidjetson/backend_mvp/app/vision_skill_runtime.py
+legacy_quarantine/2026-04-29/rokidjetson/backend_mvp/app/openai_realtime_skills.py
+legacy_quarantine/2026-04-29/rokidjetson/backend_mvp/app/voice_realtime_transcription_client.py
+legacy_quarantine/2026-04-29/rokidjetson/backend_mvp/app/vision_skill_runtime.py
 ```
 
 ## Current HUD Output
@@ -140,16 +145,16 @@ rokidjetson/backend_mvp/app/vision_skill_runtime.py
 Active V2:
 
 ```text
-jetson/hud_authority/openvision_jetson/hud_authority.py
-jetson/hud_authority/openvision_jetson/hud.py
-jetson/agent/openvision_jetson/contracts.py
-shared/schemas/hud_scene.schema.json
+OpenVision rokid/jetson/hud_authority/openvision_jetson/hud_authority.py
+OpenVision rokid/jetson/hud_authority/openvision_jetson/hud.py
+OpenVision rokid/jetson/agent/openvision_jetson/contracts.py
+OpenVision rokid/shared/schemas/hud_scene.schema.json
 ```
 
 Legacy Android rendering reference:
 
 ```text
-RokidVideoStream/app/src/main/java/com/example/cxrservicedemo/videostream/Rv101HudRenderer.kt
+legacy_quarantine/2026-04-29/RokidVideoStream/app/src/main/java/com/example/cxrservicedemo/videostream/Rv101HudRenderer.kt
 ```
 
 ## Current Logging / Session / Replay
@@ -180,7 +185,7 @@ This is still a skeleton. Durable disk replay, retention policy, and privacy con
 Perception graph:
 
 ```text
-exists: jetson/perception/openvision_jetson/perception_graph.py
+exists: OpenVision rokid/jetson/perception/openvision_jetson/perception_graph.py
 status: schema-aligned snapshots with zones, frame dimensions, object ages, and recent temporal continuity
 ```
 
@@ -194,10 +199,19 @@ status: manifest-driven registry with executor still mapped by known skill names
 Cloud gateway:
 
 ```text
-exists: jetson/cloud_gateway/openvision_jetson/cloud_gateway.py
-status: typed evidence bundle/result validation, privacy gate, request budget, and provider fallback
+exists: OpenVision rokid/jetson/cloud_gateway/openvision_jetson/cloud_gateway.py
+status: typed evidence/result validation, privacy gate, request budget, provider fallback
 docs exist: docs/openvision/09_CLOUD_ESCALATION_GATEWAY.md
 schemas exist: cloud_evidence_bundle.schema.md, cloud_result.schema.md
+```
+
+Cloud realtime tool/media/display contracts:
+
+```text
+docs exist: 00_CODEX_START_HERE_CLOUD_REALTIME_V2.md,
+            17_MEDIA_ACTIVATION_POLICY.md through 26_NEXT_PRS_CLOUD_ORCHESTRATED_V2.md
+schemas exist: realtime_tool_call.schema.md, media_command.schema.md, display_command.schema.md
+status: docs installed; runtime models/dispatch still need implementation
 ```
 
 Scorecard / replay:
@@ -213,24 +227,25 @@ Shared JSON schemas:
 exists: session, HUD scene, skill call, skill manifest, perception graph,
         cloud evidence bundle, cloud result, memory event, session replay,
         session scorecard
+docs also define: realtime tool call, media command, display command
 status: Phase 0 schema foundation is now concrete enough for runtime tests
 ```
 
 ## Highest Current Risks
 
 1. V2 runtime is still thinner than the product docs.
-2. Cloud gateway foundation exists, but full runtime enforcement across every skill is still incomplete.
-3. Perception graph has temporal baseline, but not a production detector/tracker feed.
-4. Skill executor is not yet plugin/runtime-dispatched by manifest.
+2. Typed RealtimeToolCall/ToolResult/ToolError models and the first JetsonToolServer skill-tool path now exist.
+3. Media/display command schemas exist, but runtime adapters are not implemented yet.
+4. Skill executor is not yet fully plugin/runtime-dispatched by manifest/tool name.
 5. Clean V2 Android app is not buildable.
 6. YOLO26 integration is adapter-only and must stay separate from Ring.
 7. Replay/scorecard is in-memory only, although its schema surface now exists.
 8. Ops Console can drift into debug bloat if not kept schema-backed.
-9. Legacy dirty files can confuse contributors.
+9. Legacy dirty files can confuse future agents.
 10. No real RV101 signoff log exists for the clean V2 Android module yet.
 
 ## Recommended Next PRs
 
-1. `feat: make skill executor dispatch by manifest/runtime adapter`
-2. `feat: add Vietnamese local router MVP`
-3. `feat: enforce cloud gateway for ambiguous skill verification`
+1. `feat: enforce JetsonToolServer timeout privacy budget policy`
+2. `feat: implement MediaCommand runtime gateway`
+3. `feat: adapt DisplayCommand to HUD scene protocol`

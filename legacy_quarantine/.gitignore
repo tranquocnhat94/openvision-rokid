@@ -1,0 +1,11 @@
+.DS_Store
+.gradle/
+.kotlin/
+build/
+app/build/
+local.properties
+config/
+*.env
+*.key
+*.pem
+secrets/

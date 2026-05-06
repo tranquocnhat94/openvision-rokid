@@ -1,0 +1,44 @@
+[Unit]
+Description=OpenVision Rokid DeepStream YOLO26 Worker
+After=network-online.target openvision-jetson.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jay
+WorkingDirectory=/home/jay/openvision-rokid-v2/jetson/perception
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONPATH=/usr/lib/python3/dist-packages:/home/jay/openvision-rokid-v2/jetson/agent:/home/jay/openvision-rokid-v2/jetson/perception
+Environment=OPENVISION_RUNTIME_DIR=/home/jay/openvision-rokid-v2/runtime
+Environment=OPENVISION_DEEPSTREAM_YOLO26_WORKER_ENABLED=0
+Environment=OPENVISION_DEEPSTREAM_YOLO26_JETSON_URL=http://127.0.0.1:8765
+Environment=OPENVISION_DEEPSTREAM_YOLO26_SOURCE=openvision_rv101_yolo26_deepstream
+Environment=OPENVISION_DEEPSTREAM_APP_BIN=/usr/bin/deepstream-app
+Environment=OPENVISION_MOSQUITTO_SUB_BIN=/usr/bin/mosquitto_sub
+Environment=OPENVISION_DEEPSTREAM_YOLO26_ONNX_PATH=/home/jay/DeepStream-Yolo/yolo26s.onnx
+Environment=OPENVISION_DEEPSTREAM_YOLO26_ENGINE_PATH=/home/jay/openvision-rokid-v2/runtime/yolo26/openvision_yolo26.engine
+Environment=OPENVISION_DEEPSTREAM_YOLO26_CUSTOM_LIB_PATH=/home/jay/DeepStream-Yolo/nvdsinfer_custom_impl_Yolo/libnvdsinfer_custom_impl_Yolo.so
+Environment=OPENVISION_DEEPSTREAM_YOLO26_LABELS_PATH=/home/jay/openvision-rokid-v2/runtime/yolo26/yolo26_labels.txt
+Environment=OPENVISION_DEEPSTREAM_YOLO26_MQTT_HOST=127.0.0.1
+Environment=OPENVISION_DEEPSTREAM_YOLO26_MQTT_PORT=1884
+Environment=OPENVISION_DEEPSTREAM_YOLO26_RTSP_PORT=8785
+Environment=OPENVISION_DEEPSTREAM_YOLO26_ANNOTATED_RTSP_ENABLED=1
+Environment=OPENVISION_DEEPSTREAM_YOLO26_ANNOTATED_RTSP_PORT=8795
+Environment=OPENVISION_DEEPSTREAM_YOLO26_ANNOTATED_UDP_PORT=5600
+Environment=OPENVISION_DEEPSTREAM_YOLO26_ANNOTATED_BITRATE=2500000
+Environment=OPENVISION_DEEPSTREAM_YOLO26_STREAM_WIDTH=800
+Environment=OPENVISION_DEEPSTREAM_YOLO26_STREAM_HEIGHT=600
+Environment=OPENVISION_DEEPSTREAM_YOLO26_STREAM_FPS=15
+Environment=OPENVISION_DEEPSTREAM_YOLO26_STREAMMUX_WIDTH=800
+Environment=OPENVISION_DEEPSTREAM_YOLO26_STREAMMUX_HEIGHT=600
+Environment=OPENVISION_DEEPSTREAM_YOLO26_MIN_CONFIDENCE=0.35
+Environment=OPENVISION_DEEPSTREAM_YOLO26_INFER_INTERVAL=0
+Environment=OPENVISION_DEEPSTREAM_YOLO26_TRACKER_ENABLED=1
+EnvironmentFile=-/home/jay/openvision-rokid-v2/ops/openvision.env
+ExecStart=/home/jay/openvision-rokid-v2/.venv/bin/python -m openvision_jetson.deepstream_yolo26_worker
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

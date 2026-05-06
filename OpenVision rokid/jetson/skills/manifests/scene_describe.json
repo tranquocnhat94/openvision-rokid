@@ -1,0 +1,59 @@
+{
+  "id": "openvision.skill.scene_describe",
+  "version": "0.1.0",
+  "name": "scene_describe",
+  "description": "Describe the current scene in front of the user from Jetson-owned frame evidence. Use for open scene requests like \"đang có gì trước mặt tôi\", \"trước mặt tôi có gì\", \"nhìn xem có gì\", or \"mô tả cảnh trước mặt\".",
+  "tool_name": "scene_describe",
+  "latency_class": "interactive",
+  "local_first": true,
+  "cloud_allowed": true,
+  "cloud_behavior": "gateway_optional",
+  "privacy_level": "medium",
+  "media_requirements": {
+    "default_mode": "snapshot",
+    "allowed_modes": ["snapshot", "burst_clip"],
+    "requires_camera": true,
+    "requires_mic": false,
+    "live_video_allowed": false
+  },
+  "display_capabilities": ["text_hud", "thumbnail_card"],
+  "memory_allowed": false,
+  "hud_policy": "answer_strip",
+  "timeout_ms": 9000,
+  "local_resources": ["frame_bus", "perception_graph"],
+  "activation_phrases_vi": [
+    "đang có gì trước mặt tôi",
+    "trước mặt tôi có gì",
+    "nhìn xem có gì",
+    "xem phía trước có gì",
+    "mô tả cảnh trước mặt",
+    "mô tả cảnh",
+    "nhìn phía trước"
+  ],
+  "activation_phrases_en": ["describe scene", "what is in front", "what do you see"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "focus": {"type": "string", "minLength": 1},
+      "detail_level": {"type": "string"}
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "answer": {"type": "string"},
+      "evidence": {"type": "array", "items": {"type": "string"}},
+      "preview": {"type": "object"}
+    },
+    "required": ["answer"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": [
+    "requests fresh snapshot before scene description when no current media exists",
+    "uses cloud gateway evidence bundle when local perception is insufficient",
+    "returns concise HUD answer strip"
+  ],
+  "failure_modes": ["no frame evidence", "cloud unavailable when needed", "privacy blocked"]
+}

@@ -1,0 +1,107 @@
+{
+  "id": "openvision.skill.target_finder",
+  "version": "0.1.0",
+  "name": "target_finder",
+  "description": "Start a bounded live target-finding session, consume YOLO26 or local face identity stream tracks when available, and guide the wearer toward person/object tracks with HUD aim assist. Named-contact reminders can use the local OpenVision contact identity DB when enrolled samples exist.",
+  "tool_name": "target_finder",
+  "latency_class": "live",
+  "local_first": true,
+  "cloud_allowed": false,
+  "cloud_behavior": "local_only",
+  "privacy_level": "high",
+  "media_requirements": {
+    "default_mode": "live_video",
+    "allowed_modes": ["snapshot", "burst_clip", "live_video"],
+    "requires_camera": true,
+    "requires_mic": false,
+    "live_video_allowed": true
+  },
+  "display_capabilities": ["text_hud", "thumbnail_card", "target_hint", "live_overlay"],
+  "memory_allowed": true,
+  "hud_policy": "target_hint",
+  "timeout_ms": 4000,
+  "local_resources": ["perception_graph", "yolo26_rokid_adapter", "face_identity_worker", "contact_identity_db", "media_command_gateway", "hud_authority"],
+  "activation_phrases_vi": [
+    "tìm mục tiêu",
+    "tìm người trong đám đông",
+    "tìm người quen",
+    "người đó ở đâu",
+    "dẫn tôi tới người đó"
+  ],
+  "activation_phrases_en": ["find target", "find person in crowd", "guide me to the target"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Original user request. Do not rewrite named-person requests such as 'tìm Trâm' into generic text."
+      },
+      "target_type": {"type": "string", "enum": ["person", "object"]},
+      "target_name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Person/contact name to find, for example 'Trâm' or 'A Bảo'. Include this when the user says a name."
+      },
+      "identity_query": {
+        "type": "boolean",
+        "description": "True when the user wants to identify/find a known person or contact, not just anonymous person tracking."
+      },
+      "max_candidates": {"type": "integer", "minimum": 1, "maximum": 8},
+      "desired_zone": {
+        "type": "string",
+        "enum": ["left", "left_front", "front", "right_front", "right", "near", "far", "unknown"]
+      },
+      "zoom_if_far": {"type": "boolean"},
+      "timeout_ms": {"type": "integer", "minimum": 3000, "maximum": 60000},
+      "fps": {"type": "number", "minimum": 1, "maximum": 30},
+      "media_profile": {
+        "type": "string",
+        "enum": [
+          "eco",
+          "medium",
+          "balanced",
+          "high",
+          "diagnostic_30",
+          "rv101_eco_live",
+          "rv101_medium_yolo",
+          "rv101_high_detail",
+          "rv101_diagnostic_30"
+        ],
+        "description": "Optional Jetson-authoritative live camera profile. Default is rv101_medium_yolo; use diagnostic_30 only for explicit performance tests."
+      }
+    },
+    "required": ["query"],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "summary": {"type": "string"},
+      "candidates": {"type": "array", "items": {"type": "object"}},
+      "target_hint": {"type": "object"},
+      "detector_status": {"type": "object"},
+      "identity_policy": {"type": "object"},
+      "identity_provider": {"type": "object"}
+    },
+    "required": ["summary", "candidates", "target_hint", "detector_status", "identity_policy", "identity_provider"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": [
+    "starts bounded live_video through MediaCommand",
+    "updates HUD after YOLO26 external_stream bbox frames arrive",
+    "updates HUD after face identity stream bbox and embedding frames arrive",
+    "returns anonymous person IDs from perception graph",
+    "publishes HUD crosshair and direction hint",
+    "returns local contact DB match status for named-contact lookup",
+    "falls back to anonymous IDs when no enrolled sample matches"
+  ],
+  "failure_modes": [
+    "no live media client",
+    "YOLO26 stream bridge ready but no bbox frames published",
+    "face identity worker missing OpenCV deps or YuNet/SFace models",
+    "perception detector offline",
+    "no visible candidates",
+    "named-contact lookup requested before local contact samples exist"
+  ]
+}

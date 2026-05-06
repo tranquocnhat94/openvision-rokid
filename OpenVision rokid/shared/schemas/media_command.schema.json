@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/media_command.schema.json",
+  "title": "MediaCommand",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "command_id",
+    "mode",
+    "session_id",
+    "auto_stop",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "openvision.media_command.v1"},
+    "command_id": {"type": "string"},
+    "mode": {"type": "string", "enum": ["none", "snapshot", "burst_clip", "live_video"]},
+    "session_id": {"type": "string"},
+    "skill_id": {"type": ["string", "null"]},
+    "reason": {"type": ["string", "null"]},
+    "timeout_ms": {"type": ["integer", "null"], "minimum": 1},
+    "fps": {"type": ["number", "null"], "minimum": 0},
+    "resolution": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1}
+      }
+    },
+    "auto_stop": {"type": "boolean"},
+    "params": {"type": "object"},
+    "created_at": {"type": "string"}
+  }
+}

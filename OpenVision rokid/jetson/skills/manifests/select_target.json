@@ -1,0 +1,48 @@
+{
+  "id": "openvision.skill.select_target",
+  "version": "0.1.0",
+  "name": "select_target",
+  "description": "Set the active selected target for follow-up visual questions, optionally attaching a user-confirmed display name for session-local reminders.",
+  "tool_name": "select_target",
+  "latency_class": "live",
+  "local_first": true,
+  "cloud_allowed": false,
+  "cloud_behavior": "local_only",
+  "privacy_level": "medium",
+  "media_requirements": {
+    "default_mode": "none",
+    "allowed_modes": ["none"],
+    "requires_camera": false,
+    "requires_mic": false,
+    "live_video_allowed": false
+  },
+  "display_capabilities": ["text_hud", "target_hint"],
+  "memory_allowed": false,
+  "hud_policy": "target_hint",
+  "timeout_ms": 1000,
+  "local_resources": ["selected_target_state"],
+  "activation_phrases_vi": ["chọn người này", "theo dõi mục tiêu này", "ID này là người quen"],
+  "activation_phrases_en": ["select target", "track this target"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "target_id": {"type": "string", "minLength": 1},
+      "reason": {"type": "string"},
+      "display_name": {"type": "string"},
+      "contact_note": {"type": "string"}
+    },
+    "required": ["target_id"],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "selected_target": {"type": "object"},
+      "hud_hint": {"type": "object"}
+    },
+    "required": ["selected_target"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": ["stores selected target by session", "does not call cloud"],
+  "failure_modes": ["target_id missing", "candidate expired"]
+}

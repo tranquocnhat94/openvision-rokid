@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/tool_error.schema.json",
+  "title": "ToolError",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tool_call_id",
+    "tool_name",
+    "status",
+    "error",
+    "duration_ms",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "openvision.tool_error.v1"},
+    "tool_call_id": {"type": "string"},
+    "tool_name": {"type": "string"},
+    "session_id": {"type": ["string", "null"]},
+    "status": {"type": "string", "const": "error"},
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "additionalProperties": true,
+      "properties": {
+        "code": {"type": "string"},
+        "message": {"type": "string"},
+        "details": {"type": ["array", "object", "string", "null"]}
+      }
+    },
+    "duration_ms": {"type": "integer", "minimum": 0},
+    "created_at": {"type": "string"}
+  }
+}

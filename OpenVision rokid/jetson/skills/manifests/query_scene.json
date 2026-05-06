@@ -1,0 +1,53 @@
+{
+  "id": "openvision.skill.query_scene",
+  "version": "0.1.0",
+  "name": "query_scene",
+  "description": "Answer a specific visual question from current Jetson frame evidence. Prefer scene_describe for open scene requests like \"đang có gì trước mặt tôi\".",
+  "tool_name": "query_scene",
+  "latency_class": "interactive",
+  "local_first": true,
+  "cloud_allowed": true,
+  "cloud_behavior": "gateway_optional",
+  "privacy_level": "medium",
+  "media_requirements": {
+    "default_mode": "snapshot",
+    "allowed_modes": ["snapshot", "burst_clip"],
+    "requires_camera": true,
+    "requires_mic": false,
+    "live_video_allowed": false
+  },
+  "display_capabilities": ["text_hud", "thumbnail_card"],
+  "memory_allowed": false,
+  "hud_policy": "answer_strip",
+  "timeout_ms": 9000,
+  "local_resources": ["frame_bus", "perception_graph"],
+  "activation_phrases_vi": [
+    "hỏi về cảnh",
+    "xem kỹ cảnh",
+    "cái đó là gì",
+    "vật đó là gì",
+    "màu gì",
+    "có chữ gì"
+  ],
+  "activation_phrases_en": ["describe scene", "what is in front"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "question": {"type": "string", "minLength": 1},
+      "include_crops": {"type": "boolean"}
+    },
+    "required": ["question"],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "answer": {"type": "string"},
+      "evidence": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["answer"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": ["uses perception graph first", "only escalates if local evidence is insufficient"],
+  "failure_modes": ["no frame evidence", "cloud unavailable when needed"]
+}

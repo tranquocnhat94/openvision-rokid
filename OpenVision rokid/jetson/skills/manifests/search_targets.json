@@ -1,0 +1,46 @@
+{
+  "id": "openvision.skill.search_targets",
+  "version": "0.1.0",
+  "name": "search_targets",
+  "description": "Find people/objects from existing perception evidence and return target candidates. Do not use for realtime name reminders or named-person guidance: use person_info scan_mode=name_reminder for 'nhắc tên ...' and target_finder for 'tìm/chỉ/dẫn tới ...'. Attribute queries such as shirt color, glasses, standing/sitting are unverified until a cloud attribute resolver confirms them.",
+  "tool_name": "search_targets",
+  "latency_class": "interactive",
+  "local_first": true,
+  "cloud_allowed": true,
+  "cloud_behavior": "gateway_optional",
+  "privacy_level": "medium",
+  "media_requirements": {
+    "default_mode": "snapshot",
+    "allowed_modes": ["snapshot", "burst_clip", "live_video"],
+    "requires_camera": true,
+    "requires_mic": false,
+    "live_video_allowed": true
+  },
+  "display_capabilities": ["text_hud", "thumbnail_card", "target_hint"],
+  "memory_allowed": false,
+  "hud_policy": "thumbnail_strip",
+  "timeout_ms": 6500,
+  "local_resources": ["perception_graph", "crop_store"],
+  "activation_phrases_vi": ["tìm người", "tìm áo xanh", "người mặc áo", "mục tiêu ở đâu"],
+  "activation_phrases_en": ["find target", "find person", "person wearing"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "query": {"type": "string", "minLength": 1},
+      "max_candidates": {"type": "integer", "minimum": 1, "maximum": 8}
+    },
+    "required": ["query"],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "candidates": {"type": "array", "items": {"type": "object"}},
+      "summary": {"type": "string"}
+    },
+    "required": ["candidates"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": ["returns local candidates", "marks attribute matches unverified before cloud resolver"],
+  "failure_modes": ["no perception snapshot", "no candidate crop", "cloud resolver unavailable"]
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenVision Face / People Registry</title>
+    <link rel="stylesheet" href="/style.css?v=20260430-people-page1" />
+  </head>
+  <body class="people-page">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">OpenVision Rokid v2</div>
+        <h1>Face / People Registry</h1>
+      </div>
+      <div class="status-row">
+        <span id="peopleStatusChip" class="chip muted">Checking</span>
+        <a class="link-button" href="/">Ops Console</a>
+        <button id="peoplePageSyncButton" type="button">Sync Immich</button>
+        <button id="peoplePageRefreshButton" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <main class="layout people-layout">
+      <section class="band span-2">
+        <div class="section-head">
+          <div>
+            <h2>People Manager</h2>
+            <p class="section-note">Manage Immich face groups, local contact metadata, and identity enrollment for target-finder skills.</p>
+          </div>
+        </div>
+        <div id="peopleRegistry"></div>
+      </section>
+    </main>
+
+    <script src="/people.js?v=20260430-people-page1" defer></script>
+  </body>
+</html>

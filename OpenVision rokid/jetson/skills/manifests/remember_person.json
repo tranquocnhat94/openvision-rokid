@@ -1,0 +1,67 @@
+{
+  "id": "openvision.skill.remember_person",
+  "version": "0.1.0",
+  "name": "remember_person",
+  "description": "Capture a fresh snapshot of the person the wearer is pointing at, upload it to the configured Immich account, keep only metadata in OpenVision People Registry, and optionally enroll a local contact identity sample when a name is supplied.",
+  "tool_name": "remember_person",
+  "latency_class": "interactive",
+  "local_first": true,
+  "cloud_allowed": false,
+  "cloud_behavior": "local_only",
+  "privacy_level": "high",
+  "media_requirements": {
+    "default_mode": "snapshot",
+    "allowed_modes": ["snapshot"],
+    "requires_camera": true,
+    "requires_mic": false,
+    "live_video_allowed": false
+  },
+  "display_capabilities": ["text_hud", "thumbnail_card"],
+  "memory_allowed": true,
+  "hud_policy": "answer_strip",
+  "timeout_ms": 12000,
+  "local_resources": ["people_registry", "immich_connector", "contact_identity_db", "media_command_gateway", "hud_authority"],
+  "activation_phrases_vi": [
+    "ghi nhớ người này",
+    "nhớ người này",
+    "lưu người này vào Immich",
+    "ghi nhớ người này là Trâm",
+    "thêm người này vào danh bạ mặt"
+  ],
+  "activation_phrases_en": ["remember this person", "save this person", "add this face"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "display_name": {"type": "string"},
+      "aliases": {"type": "array", "items": {"type": "string"}},
+      "notes": {"type": "string"},
+      "enroll_identity": {"type": "boolean"}
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "summary": {"type": "string"},
+      "memory": {"type": "object"},
+      "preview": {"type": "object"}
+    },
+    "required": ["summary", "memory"],
+    "additionalProperties": false
+  },
+  "acceptance_tests": [
+    "requests a fresh snapshot through MediaCommand when no preview exists",
+    "uploads snapshot bytes to Immich using the configured API key",
+    "does not store image bytes in the People Registry DB",
+    "records pending face-sync metadata for Face UI and later Immich people sync",
+    "optionally enrolls a local identity sample when display_name is supplied"
+  ],
+  "failure_modes": [
+    "no active media session",
+    "camera snapshot timeout or cancellation",
+    "Immich connector unconfigured or unreachable",
+    "face identity backend unavailable for optional local enrollment",
+    "Immich face detection has not yet grouped the uploaded image"
+  ]
+}

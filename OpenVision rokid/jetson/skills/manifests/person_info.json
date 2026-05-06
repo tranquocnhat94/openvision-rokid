@@ -1,0 +1,140 @@
+{
+  "id": "openvision.skill.person_info",
+  "version": "0.1.0",
+  "name": "person_info",
+  "description": "Run a snapshot-first known-person lookup, scan visible face tracks with local Face Identity, compare against the OpenVision contact identity DB, enrich matches from People Registry metadata, and answer flexibly with the person name or requested profile details. A bounded live name-reminder mode is available only when explicitly requested.",
+  "tool_name": "person_info",
+  "latency_class": "interactive",
+  "local_first": true,
+  "cloud_allowed": false,
+  "cloud_behavior": "local_only",
+  "privacy_level": "high",
+  "media_requirements": {
+    "default_mode": "snapshot",
+    "allowed_modes": ["snapshot", "live_video"],
+    "requires_camera": true,
+    "requires_mic": false,
+    "live_video_allowed": true
+  },
+  "display_capabilities": ["text_hud", "thumbnail_card", "target_hint", "live_overlay"],
+  "memory_allowed": true,
+  "hud_policy": "answer_strip",
+  "timeout_ms": 8000,
+  "local_resources": ["perception_graph", "face_identity_worker", "contact_identity_db", "people_registry", "media_command_gateway", "hud_authority"],
+  "activation_phrases_vi": [
+    "có ai quen không",
+    "người này tôi đã gặp chưa",
+    "tôi có biết người này không",
+    "người này là ai",
+    "cho tôi thông tin về người này",
+    "còn thông tin gì không"
+  ],
+  "activation_phrases_en": ["do I know this person", "who is this", "tell me about this person"],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Original user request. Keep follow-up wording such as 'còn thông tin gì không' so Jetson can choose the right detail level."
+      },
+      "question": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Optional alias for query when the realtime model phrases this as a question."
+      },
+      "info_focus": {
+        "type": "string",
+        "enum": ["auto", "name", "summary", "contact", "relationship", "full"],
+        "description": "Use name for 'có ai quen không'; summary for normal info; contact/relationship/full for specific follow-ups."
+      },
+      "scan_mode": {
+        "type": "string",
+        "enum": ["snapshot", "live_video", "name_reminder"],
+        "description": "Default snapshot for low power. Use name_reminder/live_video only when the user explicitly asks for realtime name reminders."
+      },
+      "media_mode": {
+        "type": "string",
+        "enum": ["snapshot", "live_video"],
+        "description": "Optional lower-level media override; scan_mode is preferred."
+      },
+      "use_last_match": {"type": "boolean"},
+      "max_candidates": {"type": "integer", "minimum": 1, "maximum": 8},
+      "snapshot_sample_count": {
+        "type": "integer",
+        "minimum": 2,
+        "maximum": 6,
+        "description": "Optional snapshot quality gate sample count. Default is 4 recent preview frames."
+      },
+      "snapshot_min_new_frames": {
+        "type": "integer",
+        "minimum": 2,
+        "maximum": 8,
+        "description": "Optional minimum new preview frames before person_info snapshot continuation."
+      },
+      "snapshot_settle_ms": {
+        "type": "integer",
+        "minimum": 450,
+        "maximum": 1500,
+        "description": "Optional camera settle time for snapshot quality gate."
+      },
+      "timeout_ms": {"type": "integer", "minimum": 3000, "maximum": 60000},
+      "fps": {"type": "number", "minimum": 1, "maximum": 30},
+      "media_profile": {
+        "type": "string",
+        "enum": [
+          "eco",
+          "medium",
+          "balanced",
+          "high",
+          "diagnostic_30",
+          "rv101_eco_live",
+          "rv101_medium_yolo",
+          "rv101_high_detail",
+          "rv101_diagnostic_30"
+        ],
+        "description": "Optional Jetson-authoritative live camera profile for name_reminder/live_video. Snapshot remains the default for normal person_info."
+      }
+    },
+    "required": ["query"],
+    "additionalProperties": false
+  },
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "answer": {"type": "string"},
+      "known_person": {"type": "boolean"},
+      "known_people": {"type": "array", "items": {"type": "object"}},
+      "scan_mode": {"type": "string"},
+      "info_focus": {"type": "string"},
+      "identity_provider": {"type": "object"},
+      "identity_match": {"type": "object"},
+      "profile": {"type": "object"},
+      "candidates": {"type": "array", "items": {"type": "object"}},
+      "detector_status": {"type": "object"},
+      "hud": {"type": "object"}
+    },
+    "required": ["answer", "known_person", "identity_provider", "profile", "candidates", "detector_status", "hud"],
+    "additionalProperties": true
+  },
+  "acceptance_tests": [
+    "uses snapshot MediaCommand by default for low-power known-person lookup",
+    "quality-gates snapshot capture by sampling recent preview frames and selecting the clearest face frame",
+    "can start bounded live_video only when scan_mode requests live name reminder",
+    "runs local Face Identity over the captured snapshot or live stream instead of using cloud visual identity",
+    "matches visible face embeddings against the local OpenVision contact identity DB",
+    "reports face-quality reasons such as too dark, too small, low contrast, or blurry before treating a lookup as no match",
+    "enriches the matched name with People Registry metadata when available",
+    "shows multiple face thumbnails with known names when a crowd snapshot contains several people",
+    "returns only a short name answer for 'có ai quen không'",
+    "returns richer stored details for follow-up questions such as phone, address, first met, relationship, or notes"
+  ],
+  "failure_modes": [
+    "no active media client",
+    "face identity stream not ready",
+    "no enrolled local contact samples",
+    "visible face is too small, too dark, low contrast, or blurred for identity matching",
+    "matched contact is not linked to a People Registry profile",
+    "People Registry metadata is incomplete"
+  ]
+}

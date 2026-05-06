@@ -1,0 +1,61 @@
+{
+  "suiteName": "rokid_vi_command_suite_v1",
+  "description": "Command-first STT evaluation clips from real Rokid voice sessions. Strict cases count toward product suitability.",
+  "cases": [
+    {
+      "id": "target_search_phrase_4s",
+      "wavPath": "artifacts/audio/sess_34db8868_phrase_4s.wav",
+      "expectedTranscript": "tìm người áo vàng",
+      "requiredTokens": ["tìm", "người", "áo", "vàng"],
+      "expectedIntent": "target_search",
+      "expectedMode": "visual_assistant",
+      "expectedTargetQuery": "nguoi ao vang",
+      "strict": true,
+      "notes": "Short isolated target-search command."
+    },
+    {
+      "id": "target_search_good_window",
+      "wavPath": "artifacts/audio/sess_34db8868_good_window.wav",
+      "expectedTranscript": "tìm người áo vàng",
+      "requiredTokens": ["tìm", "người", "áo", "vàng"],
+      "expectedIntent": "target_search",
+      "expectedMode": "visual_assistant",
+      "expectedTargetQuery": "nguoi ao vang",
+      "strict": true,
+      "notes": "Longer window around the same target-search command."
+    },
+    {
+      "id": "traffic_count_transport",
+      "wavPath": "artifacts/audio/sess_34db8868_count_transport.wav",
+      "expectedTranscript": "bật chế độ đếm phương tiện",
+      "requiredTokens": ["bật", "chế", "độ", "đếm", "phương", "tiện"],
+      "expectedIntent": "mode_change",
+      "expectedMode": "traffic_count",
+      "expectedTargetQuery": "",
+      "strict": true,
+      "notes": "Traffic counting command with the transport phrase."
+    },
+    {
+      "id": "incomplete_count_prefix_safe",
+      "wavPath": "artifacts/audio/sess_34db8868_count_vehicle_tight.wav",
+      "expectedTranscript": "bật chế độ đếm",
+      "requiredTokens": ["bật", "chế", "độ", "đếm"],
+      "expectedIntent": "transcript_only",
+      "expectedMode": "",
+      "expectedTargetQuery": "",
+      "strict": true,
+      "notes": "Ambiguous prefix should not escalate into a mode change."
+    },
+    {
+      "id": "full_session_reference",
+      "wavPath": "artifacts/audio/sess_34db8868.wav",
+      "expectedTranscript": "",
+      "requiredTokens": ["xin", "chào", "áo", "vàng", "đếm", "phương", "tiện"],
+      "expectedIntent": "",
+      "expectedMode": "",
+      "expectedTargetQuery": "",
+      "strict": false,
+      "notes": "Diagnostic long-form session reference; not counted in strict pass rate."
+    }
+  ]
+}

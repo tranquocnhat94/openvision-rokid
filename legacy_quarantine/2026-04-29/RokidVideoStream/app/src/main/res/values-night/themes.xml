@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.RokidVideoStream" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/signal_green</item>
+        <item name="colorPrimaryVariant">@color/signal_green</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        <item name="colorSecondary">@color/signal_green</item>
+        <item name="colorSecondaryVariant">@color/signal_green_soft</item>
+        <item name="colorOnSecondary">@color/ink_black</item>
+        <item name="android:statusBarColor">@color/ink_black</item>
+        <item name="android:navigationBarColor">@color/ink_black</item>
+        <item name="android:windowBackground">@color/ink_black</item>
+    </style>
+</resources>

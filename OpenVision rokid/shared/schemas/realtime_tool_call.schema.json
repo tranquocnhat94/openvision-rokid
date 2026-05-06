@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/realtime_tool_call.schema.json",
+  "title": "RealtimeToolCall",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "call_id",
+    "name",
+    "arguments",
+    "source",
+    "received_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "openvision.realtime_tool_call.v1"},
+    "call_id": {"type": "string"},
+    "name": {"type": "string"},
+    "arguments": {"type": "object"},
+    "session_id": {"type": ["string", "null"]},
+    "source": {"type": "string", "enum": ["openai_realtime", "local_test", "replay"]},
+    "received_at": {"type": "string"}
+  }
+}

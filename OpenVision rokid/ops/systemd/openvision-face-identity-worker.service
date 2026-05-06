@@ -1,0 +1,21 @@
+[Unit]
+Description=OpenVision Rokid Face Identity Stream Worker
+After=network-online.target openvision-jetson.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jay
+WorkingDirectory=/home/jay/openvision-rokid-v2
+EnvironmentFile=-/home/jay/openvision-rokid-v2/ops/openvision.env
+Environment=PYTHONPATH=/home/jay/openvision-rokid-v2/jetson/agent:/home/jay/openvision-rokid-v2/jetson/perception
+Environment=OPENVISION_FACE_WORKER_JETSON_URL=http://127.0.0.1:8765
+Environment=OPENVISION_FACE_WORKER_SOURCE=openvision_rokid_face_identity
+Environment=OPENVISION_FACE_WORKER_DETECTION_TARGET_SIZE=1280
+Environment=OPENVISION_FACE_WORKER_MIN_IDENTITY_FACE_SIDE_PX=56
+Restart=on-failure
+RestartSec=2
+ExecStart=/home/jay/openvision-rokid-v2/.venv/bin/python -m openvision_jetson.face_identity_worker
+
+[Install]
+WantedBy=multi-user.target

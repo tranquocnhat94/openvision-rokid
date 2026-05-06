@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ink_black">#000000</color>
+    <color name="panel_black">#00000000</color>
+    <color name="panel_black_soft">#00000000</color>
+    <color name="panel_border">#8C40FF5E</color>
+    <color name="signal_green">#40FF5E</color>
+    <color name="signal_green_soft">#8840FF5E</color>
+    <color name="signal_amber">#CC40FF5E</color>
+    <color name="signal_blue">#A640FF5E</color>
+    <color name="signal_red">#8C40FF5E</color>
+    <color name="text_primary">#40FF5E</color>
+    <color name="text_secondary">#D940FF5E</color>
+    <color name="text_muted">#9440FF5E</color>
+    <color name="visor_cyan">#40FF5E</color>
+    <color name="visor_cyan_dark">#1C1C1C</color>
+    <color name="clear">#00000000</color>
+</resources>

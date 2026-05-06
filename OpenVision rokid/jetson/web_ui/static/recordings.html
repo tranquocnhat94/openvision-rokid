@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenVision Recordings</title>
+    <link rel="stylesheet" href="/style.css?v=20260502-recordings2" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">OpenVision Rokid v2</div>
+        <h1>Recording Review</h1>
+      </div>
+      <div class="status-row">
+        <span id="recordingHealthChip" class="chip muted">Checking</span>
+        <a class="link-button" href="/" rel="noreferrer">Ops Console</a>
+        <a class="link-button" href="/people.html" target="_blank" rel="noreferrer">Face UI</a>
+        <button id="refreshRecordingsButton" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <main class="layout recordings-layout">
+      <section class="band span-2">
+        <div class="section-head">
+          <h2>RV101 Stream Recordings</h2>
+        </div>
+        <p class="section-note">
+          Play files saved on the Jetson SSD directly: processed overlay MP4, raw camera MP4, raw mic WAV, and raw evidence files.
+        </p>
+        <dl class="facts recording-facts" id="recordingFacts"></dl>
+      </section>
+
+      <section class="band span-2">
+        <div id="recordingsList" class="recordings-list"></div>
+      </section>
+    </main>
+
+    <script src="/recordings.js?v=20260502-recordings2" defer></script>
+  </body>
+</html>

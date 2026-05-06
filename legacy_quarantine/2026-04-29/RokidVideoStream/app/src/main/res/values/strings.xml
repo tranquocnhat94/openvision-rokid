@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Rokid Vision</string>
+    <string name="video_stream_title">Rokid Vision</string>
+    <string name="feature_selector_title">Modes</string>
+    <string name="feature_selector_hint">Left/right select  tap start  TV dev</string>
+    <string name="face_memory_title">Face Memory</string>
+    <string name="face_memory_subtitle">Known people</string>
+    <string name="traffic_count_title">Traffic Count</string>
+    <string name="traffic_count_subtitle">Vehicles line</string>
+    <string name="scene_monitor_title">Scene Monitor</string>
+    <string name="scene_monitor_subtitle">People objects</string>
+</resources>

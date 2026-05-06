@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ink_black">
+
+    <LinearLayout
+        android:id="@+id/topStatusContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="10dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/connectionStatusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_status_chip"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:text="connecting"
+            android:textColor="@color/text_secondary"
+            android:textSize="8sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/voiceStatusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_status_chip"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="7dp"
+            android:paddingVertical="2dp"
+            android:text="voice idle"
+            android:textColor="@color/text_muted"
+            android:textSize="8sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/centerHudCard"
+        android:layout_width="252dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/panel_black"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/panel_border"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="12dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp">
+
+            <TextView
+                android:id="@+id/hudModeChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_status_chip"
+                android:fontFamily="monospace"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="2dp"
+                android:text="voice-first"
+                android:textColor="@color/text_secondary"
+                android:textSize="8sp" />
+
+            <TextView
+                android:id="@+id/hudTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:text="Jetson HUD"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/hudPrimaryText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:text="Ready"
+                android:textColor="@color/signal_green"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/hudBodyText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:fontFamily="monospace"
+                android:gravity="center"
+                android:lineSpacingExtra="1dp"
+                android:text="Waiting for Jetson session."
+                android:textColor="@color/text_secondary"
+                android:textSize="9sp" />
+
+            <TextView
+                android:id="@+id/hudMetaText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="monospace"
+                android:gravity="center"
+                android:text="Thin client overlay"
+                android:textColor="@color/text_muted"
+                android:textSize="8sp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/targetMarkerText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_status_chip"
+        android:elevation="6dp"
+        android:fontFamily="monospace"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="2dp"
+        android:text="◎ Target"
+        android:textColor="@color/signal_green"
+        android:textSize="8sp"
+        android:visibility="gone" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/candidateGalleryCard"
+        android:layout_width="188dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="86dp"
+        android:layout_marginEnd="12dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/panel_black_soft"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="4dp"
+        app:strokeColor="@color/panel_border"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="8dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/candidateGalleryTitleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_status_chip"
+                android:fontFamily="monospace"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="2dp"
+                android:text="Jetson target"
+                android:textColor="@color/text_secondary"
+                android:textSize="8sp" />
+
+            <TextView
+                android:id="@+id/candidateDirectionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="2"
+                android:text="Awaiting target guidance"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:id="@+id/candidateItemsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/developerText"
+        android:layout_width="310dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="110dp"
+        android:fontFamily="monospace"
+        android:lineSpacingExtra="2dp"
+        android:textColor="@color/text_muted"
+        android:textSize="9sp"
+        android:visibility="gone" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/assistantStripCard"
+        android:layout_width="278dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="24dp"
+        android:elevation="8dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/panel_black_soft"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="4dp"
+        app:strokeColor="@color/panel_border"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="10dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/assistantTaskText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_status_chip"
+                android:fontFamily="monospace"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="2dp"
+                android:text="voice state"
+                android:textColor="@color/text_secondary"
+                android:textSize="8sp" />
+
+            <TextView
+                android:id="@+id/assistantAnswerText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="3"
+                android:text="Jetson HUD ready"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/assistantGalleryText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:fontFamily="monospace"
+                android:maxLines="1"
+                android:text="Waiting for Jetson HUD"
+                android:textColor="@color/text_muted"
+                android:textSize="8sp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</FrameLayout>

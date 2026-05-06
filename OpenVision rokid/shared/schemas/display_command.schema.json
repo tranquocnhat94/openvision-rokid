@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/display_command.schema.json",
+  "title": "DisplayCommand",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "command_id",
+    "kind",
+    "session_id",
+    "payload",
+    "priority",
+    "ttl_ms",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "openvision.display_command.v1"},
+    "command_id": {"type": "string"},
+    "kind": {
+      "type": "string",
+      "enum": ["text_hud", "object_card", "thumbnail_card", "full_image", "live_overlay", "debug_overlay", "clear"]
+    },
+    "session_id": {"type": "string"},
+    "skill_id": {"type": ["string", "null"]},
+    "payload": {"type": "object"},
+    "priority": {"type": "string", "enum": ["low", "normal", "high", "critical"]},
+    "ttl_ms": {"type": "integer", "minimum": 0},
+    "created_at": {"type": "string"}
+  }
+}

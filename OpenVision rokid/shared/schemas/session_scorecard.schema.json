@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/session_scorecard.schema.json",
+  "title": "SessionScorecard",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "session_id",
+    "status",
+    "score",
+    "gates",
+    "metrics",
+    "skill_eval",
+    "top_failures"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "openvision.session_scorecard.v1"},
+    "generated_at": {"type": "string"},
+    "session_id": {"type": ["string", "null"]},
+    "status": {"type": "string", "enum": ["pass", "warn", "fail"]},
+    "score": {"type": "number", "minimum": 0, "maximum": 1},
+    "gates": {"type": "object"},
+    "metrics": {"type": "object"},
+    "skill_eval": {"type": "object"},
+    "top_failures": {"type": "array", "items": {"type": "object"}}
+  }
+}

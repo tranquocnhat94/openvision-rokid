@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openvision.local/schemas/tool_result.schema.json",
+  "title": "ToolResult",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tool_call_id",
+    "tool_name",
+    "status",
+    "duration_ms",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "openvision.tool_result.v1"},
+    "tool_call_id": {"type": "string"},
+    "tool_name": {"type": "string"},
+    "session_id": {"type": ["string", "null"]},
+    "status": {
+      "type": "string",
+      "enum": ["ok", "needs_cloud", "no_evidence", "not_implemented", "cancelled"]
+    },
+    "result": {"type": ["object", "null"]},
+    "display_command": {"type": ["object", "null"]},
+    "duration_ms": {"type": "integer", "minimum": 0},
+    "created_at": {"type": "string"}
+  }
+}
