@@ -507,7 +507,7 @@ class MediaCommandGateway:
         self._latest_events[command.command_id] = event
         self._prune_command_history()
         event_type = "command_failed" if status == "error" else "command_completed"
-        severity = "error" if status == "error" else "warning" if status == "timeout" else "info"
+        severity = _media_event_severity(command=command, status=status)
         self._events.add(
             "media_command",
             event_type,
@@ -821,6 +821,16 @@ def _positive_float(value: Any, field: str) -> float:
 
 def _duration_ms(started: float) -> int:
     return max(0, int((perf_counter() - started) * 1000))
+
+
+def _media_event_severity(*, command: MediaCommand, status: str) -> str:
+    if status == "error":
+        return "error"
+    if command.mode == "live_video" and status in {"timeout", "cancelled"}:
+        return "info"
+    if status == "timeout":
+        return "warning"
+    return "info"
 
 
 def _media_event_log_payload(

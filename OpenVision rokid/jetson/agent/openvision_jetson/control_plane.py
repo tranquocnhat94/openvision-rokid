@@ -1231,17 +1231,19 @@ class OpenVisionControlPlane:
         try:
             await self.realtime.send_text(session_id=session_id, text=prompt)
         except Exception as exc:
+            status = str(continuation.get("status") or "")
+            message = str(exc)
             self.events.add(
                 "realtime",
                 "media_continuation_prompt_dropped",
                 {
                     "name": continuation.get("name"),
-                    "status": continuation.get("status"),
+                    "status": status,
                     "error": exc.__class__.__name__,
-                    "message": str(exc),
+                    "message": message,
                 },
                 session_id=session_id,
-                severity="warning",
+                severity="info" if status == "no_evidence" and "not connected" in message else "warning",
             )
             return
         self.events.add(
