@@ -1487,7 +1487,7 @@ async def _send_h264_preview_samples(
     while True:
         try:
             sample = await asyncio.wait_for(queue.get(), timeout=H264_PREVIEW_HEARTBEAT_S)
-        except TimeoutError:
+        except asyncio.TimeoutError:
             await websocket.send_json(
                 {
                     "type": "heartbeat",
